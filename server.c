@@ -10,9 +10,13 @@
 
 /*----------------------------------------------
  Serveur à lancer avant le client
+ * 
+ * TODO : Utiliser select, qui a de meilleures performances pour les grands nombres de clients.
+ * 
  ------------------------------------------------*/
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <linux/types.h>
 /* pour les sockets */
 #include <sys/socket.h>
@@ -46,17 +50,10 @@ void renvoi(int sock) {
 }
 /*------------------------------------------------------*/
 /*------------------------------------------------------*/
-main(int argc, char **argv) {
-	int socket_descriptor,
-	/* descripteur de socket */
-	nouv_socket_descriptor,
-	/* [nouveau] descripteur de socket */
-	longueur_adresse_courante;
-	/* longueur d'adresse courante d'un client */
-	sockaddr_in adresse_locale,
-	/* structure d'adresse locale*/
-	adresse_client_courant;
-	/* adresse client courant */
+int main(int argc, char **argv) {
+	int socket_descriptor,nouv_socket_descriptor,longueur_adresse_courante;
+	/* longueur_adresse_courante est la longueur d'adresse courante d'un client */
+	sockaddr_in adresse_locale,adresse_client_courant;
 	hostent* ptr_hote;
 	/* les infos recuperees sur la machine hote */
 	servent* ptr_service;
@@ -78,18 +75,6 @@ main(int argc, char **argv) {
 	/* ou AF_INET */
 	adresse_locale.sin_addr.s_addr = INADDR_ANY;
 	/* ou AF_INET */
-	/* 2 facons de definir le service que l'on va utiliser a distance */
-	/* (commenter l'une ou l'autre des solutions) */
-	/*-----------------------------------------------------------*/
-	/* SOLUTION 1 : utiliser un service existant, par ex. "irc" */
-	/*
-	 if ((ptr_service = getservbyname("irc","tcp")) == NULL) {
-	 perror("erreur : impossible de recuperer le numero de port du service desire.");
-	 exit(1);
-	 }
-	 adresse_locale.sin_port = htons(ptr_service->s_port);
-	 /*-----------------------------------------------------------*/
-	/* SOLUTION 2 : utiliser un nouveau numero de port */
 
 	 adresse_locale.sin_port = htons(5000);
 
@@ -126,4 +111,5 @@ main(int argc, char **argv) {
 		renvoi(nouv_socket_descriptor);
 		close(nouv_socket_descriptor);
 	}
+	return EXIT_SUCCESS;
 }

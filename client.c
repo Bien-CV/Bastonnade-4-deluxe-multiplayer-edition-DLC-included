@@ -13,6 +13,7 @@
  client <adresse-serveur> <message-a-transmettre>
  ------------------------------------------------------------*/
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <linux/types.h>
 #include <sys/socket.h>

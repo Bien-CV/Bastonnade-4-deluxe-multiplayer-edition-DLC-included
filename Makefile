@@ -1,16 +1,14 @@
 
 CC=gcc
-CFLAGS=-ansi -pedantic
+CFLAGS= -ansi -pedantic
 LDFLAGS=
-EXEC=server client
+EXEC= server client
 SRC= $(wildcard *.c)
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
 	
-server:
-	$(CC) -o $@ $@.c
-client:
+$(EXEC):
 	$(CC) -o $@ $@.c
 
 .PHONY: clean
