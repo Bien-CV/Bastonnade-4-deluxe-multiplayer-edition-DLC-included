@@ -28,6 +28,7 @@
 #define TAILLE_MAX_NOM 256
 #define ERROR_INT -1
 #define DEBUG 1
+#define BUFFER_SIZE 9999
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
@@ -35,16 +36,11 @@ typedef struct hostent hostent;
 typedef struct servent servent;
 
 void renvoi(int sock) {
-	char buffer[256];
+	char buffer[BUFFER_SIZE];
 	int longueur;
 	if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0)
 		return;
 	printf("message lu : %s \n", buffer);
-	buffer[0] = 'R';
-	buffer[1] = 'E';
-	buffer[longueur] = '#';
-	buffer[longueur + 1] = '\0';
-	printf("message apres traitement : %s \n", buffer);
 	printf("renvoi du message traite.\n");
 	/* mise en attente du programme pour simuler un delai de transmission */
 	sleep(3);
@@ -100,7 +96,7 @@ int mainClient(int argc, char **argv) {
 	/* info sur une machine hote */
 	servent * ptr_service;
 	/* info sur service */
-	char buffer[256];
+	char buffer[BUFFER_SIZE];
 	char * prog;
 	/* nom du programme */
 	char * host;
@@ -183,7 +179,7 @@ int mainServer(int argc, char **argv) {
 				"erreur : impossible de trouver le serveur a partir de son nom.");
 		exit(1);
 	}
-	
+
 	/* copie de ptr_hote vers adresse_locale */
 	bcopy((char*) ptr_hote->h_addr, (char*)&adresse_locale.sin_addr, ptr_hote->h_length);
 	/* initialisation de la structure adresse_locale avec les infos recuperees */
@@ -237,8 +233,8 @@ int mainServer(int argc, char **argv) {
 
 void showAliases(char ** list ){
 	int compteur;
-	if ( list[0]==NULL || list[0][0]== NULL || list[0][0]== '\0') printf("N'a pas d'alias.\n");
-	for (compteur=0;list[compteur]!=NULL;compteur++){
+	if ( list[0]==0 || list[0][0]== 0 || list[0][0]== '\0') printf("N'a pas d'alias.\n");
+	for (compteur=0;list[compteur]!=0;compteur++){
 		printf("Alias %i:",compteur);
 		printf("%s\n",list[compteur]);
 	}
@@ -246,8 +242,8 @@ void showAliases(char ** list ){
 
 void showAddrList(char ** list ){
 	int compteur;
-	if ( list[0]==NULL || list[0][0]== NULL || list[0][0]== '\0') printf("N'a pas d'adresses.\n");
-	for (compteur=0;list[compteur]!=NULL;compteur++){
+	if ( list[0]==0 || list[0][0]== 0 || list[0][0]== '\0') printf("N'a pas d'adresses.\n");
+	for (compteur=0;list[compteur]!=0;compteur++){
 		printf("Addresse %i:",compteur);
 		printf("%s\n",list[compteur]);
 	}
