@@ -27,7 +27,8 @@ void exitClient(int fd, fd_set *readfds, char fd_array[], int *num_clients){
 
 
 int main(int argc, char *argv[]) {
-   int i=0;
+	
+   int i;
    
    int port;
    int num_clients = 0;
@@ -112,7 +113,7 @@ int main(int argc, char *argv[]) {
                 fgets(kb_msg, MAX_MSG_SIZE+1, stdin);
                 //printf("%s\n",kb_msg);
                 if (strcmp(kb_msg, "quit\n")==0) {
-                    sprintf(msg, "XClient is shutting down.\n");
+                    sprintf(msg, "Client is shutting down.\n");
                     write(sockfd, msg, strlen(msg));
                     close(sockfd); //close the current client
                     exit(0); //end program
@@ -182,7 +183,7 @@ int main(int argc, char *argv[]) {
                     FD_SET(client_sockfd, &readfds);
                     fd_array[num_clients]=client_sockfd;
                     /*Client ID*/
-                    printf("Client %d joined\n",num_clients++);
+                    printf(">Client %d joined\n",num_clients++);
                     fflush(stdout);
                     
                     sprintf(msg,"M%2d",client_sockfd);
@@ -190,7 +191,7 @@ int main(int argc, char *argv[]) {
                     send(client_sockfd,msg,strlen(msg),0);
                  }
                  else {
-                    sprintf(msg, "XSorry, too many clients.  Try again later.\n");
+                    sprintf(msg, ">Sorry, too many clients.  Try again later.\n");
                     write(client_sockfd, msg, strlen(msg));
                     close(client_sockfd);
                  }
@@ -199,7 +200,7 @@ int main(int argc, char *argv[]) {
                  fgets(kb_msg, MAX_MSG_SIZE + 1, stdin);
                  //printf("%s\n",kb_msg);
                  if (strcmp(kb_msg, "quit\n")==0) {
-                    sprintf(msg, "XServer is shutting down.\n");
+                    sprintf(msg, ">Server is shutting down.\n");
                     for (i = 0; i < num_clients ; i++) {
                        write(fd_array[i], msg, strlen(msg));
                        close(fd_array[i]);
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
                     printf("%s",kb_msg+1);
                     
                      /*Exit Client*/
-                    if(msg[0] == 'X'){
+                    if(msg[0] == '>'){
                        exitClient(fd,&readfds, fd_array,&num_clients);
                     }   
                  }                                   
