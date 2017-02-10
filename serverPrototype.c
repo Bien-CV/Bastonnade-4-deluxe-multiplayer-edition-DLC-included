@@ -38,17 +38,28 @@ typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 typedef struct in_addr IN_ADDR;
 
+#define DEFAULT_PORT 5000
 #define PORT_NUMBER 5000
 #define TAILLE_MAX_NOM 256
 #define ERROR_INT -1
 #define DEBUG 1
 #define BUFFER_SIZE 9999
+#define MAX_CONNEXIONS 1000
 
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+typedef struct connection{
+	SOCKET sock;
+	hostent* hostinfo;
+	int port;
+}connection_t;
+
+connection_t connections[MAX_CONNEXIONS];
+
+int connectionCount=0;
 
 int getInt(void){
 	int tmpInt;
@@ -96,10 +107,70 @@ SOCKET newSocket(){
 	return sock;
 }
 
+void connectTo(const char* hostname){
+	SOCKET sock = newSocket();
+	struct hostent *hostinfo = NULL;
+	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
+
+	hostinfo = gethostbyname(hostname); /* on récupère les informations de l'hôte auquel on veut se connecter */
+	if (hostinfo == NULL) /* l'hôte n'existe pas */
+	{
+		fprintf (stderr, "Unknown host %s.\n", hostname);
+		exit(EXIT_FAILURE);
+	}
+
+	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr; /* l'adresse se trouve dans le champ h_addr de la structure hostinfo */
+	sin.sin_port = htons(DEFAULT_PORT); /* on utilise htons pour le port */
+	sin.sin_family = AF_INET;
+
+	if(connect(sock,(SOCKADDR *) &sin, sizeof(SOCKADDR)) == SOCKET_ERROR)
+	{
+		perror("connect()");
+		exit(errno);
+	}
+
+}
+
+void connectTo(const char* hostname, int port){
+	SOCKET sock = newSocket();
+	struct hostent *hostinfo = NULL;
+	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
+
+	hostinfo = gethostbyname(hostname); /* on récupère les informations de l'hôte auquel on veut se connecter */
+	if (hostinfo == NULL) /* l'hôte n'existe pas */
+	{
+		fprintf (stderr, "Unknown host %s.\n", hostname);
+		exit(EXIT_FAILURE);
+	}
+
+	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr; /* l'adresse se trouve dans le champ h_addr de la structure hostinfo */
+	sin.sin_port = htons(port); /* on utilise htons pour le port */
+	sin.sin_family = AF_INET;
+
+	if(connect(sock,(SOCKADDR *) &sin, sizeof(SOCKADDR)) == SOCKET_ERROR)
+	{
+		perror("connect()");
+		exit(errno);
+	}
+	
+	connections[connectionCount].sock=sock;
+	connections[connectionCount].hostinfo=hostinfo;
+	connections[connectionCount].port=port;
+	
+}
+void sendString(connection_t co, int connectionNumber){
+	SOCKET sock=connections[connectionNumber].sock;
+	char buffer[1024];
+	if(send(sock, buffer, strlen(buffer), 0) < 0)
+	{
+		perror("send()");
+		exit(errno);
+	}
+}
 int mainClient(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
 	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
-	SOCKET sock = newSocket();
+	connectTo("www.developpez.net");
 	
 	return EXIT_SUCCESS;
 }
