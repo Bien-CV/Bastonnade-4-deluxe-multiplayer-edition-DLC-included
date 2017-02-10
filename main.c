@@ -4,7 +4,7 @@
  Author      : 
  Version     :
  Copyright   : 
- Description : Hello World in C, Ansi-style
+ Description : 
  ============================================================================
  */
 
@@ -80,7 +80,7 @@ void menu(int argc, char **argv){
 }
 
 int main(int argc, char **argv){
-	printf("Start of main\n");
+	printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
 	menu(argc, argv);
 	return EXIT_SUCCESS;
 }
