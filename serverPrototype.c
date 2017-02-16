@@ -128,7 +128,7 @@ void connectTo(const char* hostname){
 		perror("connect()");
 		exit(errno);
 	}
-
+	return;
 }
 
 void connectTo(const char* hostname, int port){
@@ -158,10 +158,8 @@ void connectTo(const char* hostname, int port){
 	connections[connectionCount].port=port;
 	
 }
-void sendString(connection_t co, int connectionNumber){
-	SOCKET sock=connections[connectionNumber].sock;
-	char buffer[1024];
-	if(send(sock, buffer, strlen(buffer), 0) < 0)
+void sendString(int connectionNumber, char* string){
+	if(send(connections[connectionNumber].sock, string, strlen(string), 0) < 0)
 	{
 		perror("send()");
 		exit(errno);
@@ -170,7 +168,8 @@ void sendString(connection_t co, int connectionNumber){
 int mainClient(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
 	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
-	connectTo("www.developpez.net");
+	connectTo("localhost");
+	sendString(0,"prout");
 	
 	return EXIT_SUCCESS;
 }
