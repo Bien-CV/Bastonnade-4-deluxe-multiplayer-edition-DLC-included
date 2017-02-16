@@ -14,22 +14,19 @@
  * TODO : Utiliser select, qui a de meilleures performances pour les grands nombres de clients.
  * 
  ------------------------------------------------*/
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>/* close */
-#include <linux/types.h>
-#include <netdb.h>/* gethostbyname */
-#include "main.h"
+#ifdef WIN32 /* si vous êtes sous Windows */
+
+#include <winsock2.h> 
+# pragma comment(lib,"ws2_32.lib") //Winsock Library
+#elif defined (linux) /* si vous êtes sous Linux */
+
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <errno.h>
-
-
-
+#include <linux/types.h>
+#include <unistd.h> /* close */
+#include <netdb.h> /* gethostbyname */
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 #define closesocket(s) close(s)
@@ -38,18 +35,27 @@ typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 typedef struct in_addr IN_ADDR;
 
+#else /* sinon vous êtes sur une plateforme non supportée */
+
+#error not defined for this platform
+
+#endif
+
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <errno.h>
+
 #define DEFAULT_PORT 5000
 #define PORT_NUMBER 5000
 #define TAILLE_MAX_NOM 256
 #define ERROR_INT -1
-#define DEBUG 1
+#define DEBUG (true)
 #define BUFFER_SIZE 9999
 #define MAX_CONNEXIONS 1000
 
-typedef struct sockaddr sockaddr;
-typedef struct sockaddr_in sockaddr_in;
-typedef struct hostent hostent;
-typedef struct servent servent;
 
 typedef struct connexion{
 	SOCKET sock;
@@ -60,6 +66,43 @@ typedef struct connexion{
 connexion_t connexions[MAX_CONNEXIONS];
 
 int connexionCount=0;
+
+
+static void init(void)
+{
+#ifdef WIN32
+    WSADATA wsa;
+    int err = WSAStartup(MAKEWORD(2, 2), &wsa);
+    if(err < 0)
+    {
+        puts("WSAStartup failed !");
+        exit(EXIT_FAILURE);
+    }
+#endif
+}
+
+static void end(void)
+{
+#ifdef WIN32
+    WSACleanup();
+#endif
+}
+
+int mainClient(int argc, char **argv);
+int mainServer(int argc, char **argv);
+int getInt(void);
+void menu(int argc, char **argv);
+void renvoi(int sock);
+void showAddrList(char ** list );
+void showHostent(hostent* h);
+void showAliases(char ** list );
+void servListen();
+void closeAllSockets();
+void recvString(int connexionNumber, char* stringBuffer);
+void sendString(int connexionNumber, char* string);
+void connectTo(const char* hostname, int port);
+void connectTo(const char* hostname);
+SOCKET newSocket();
 
 int getInt(void){
 	int tmpInt;
@@ -79,7 +122,9 @@ void menu(int argc, char **argv){
 	int intInput=getInt();
 	if ( intInput == 1 ){
 		//call server
+                if DEBUG puts("Launching server...\n");
 		mainServer(argc, argv);
+                
 	}else if( intInput == 2 ){
 		//call client
 		mainClient(argc, argv);
@@ -92,9 +137,11 @@ void menu(int argc, char **argv){
 }
  
 int main(int argc, char **argv){
+        init();
 	printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
 	menu(argc, argv);
 	return EXIT_SUCCESS;
+        end();
 }
 
 SOCKET newSocket(){
@@ -169,7 +216,7 @@ void sendString(int connexionNumber, char* string){
 
 //WARNING: Attention, recv est bloquant.
 void recvString(int connexionNumber, char* stringBuffer){
-	char buffer[1024]
+	char buffer[1024];
 	int n = 0;
 
 	if((n = recv(connexions[connexionNumber].sock, buffer, sizeof buffer - 1, 0)) < 0)
@@ -184,14 +231,15 @@ int mainClient(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
 	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
 	connectTo("localhost");
-	sendString(0,"prout");
+        char sentString[] = {'p','r','o','u','t'};
+	sendString(0,sentString);
 	
 	closeAllSockets();
 	return EXIT_SUCCESS;
 }
 void closeAllSockets(){
 	for ( int i=0; i<MAX_CONNEXIONS;i++){
-		if(connexions[i] != NULL ){
+		if(connexions[i].port != 0 ){
 		closesocket(connexions[i].sock);
 		}
 	}
@@ -233,7 +281,7 @@ void servListen(){
 		perror("accept()");
 		exit(errno);
 	}
-	connexion[connexionCount].sock=csock;
+	connexions[connexionCount].sock=csock;
 }
 
 /* longueur_adresse_courante est la longueur d'adresse courante d'un client */
@@ -244,14 +292,15 @@ int mainServer(int argc, char **argv) {
 	//int bind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen);
 	//int accept(int sock, struct sockaddr *adresse, socklen_t *longueur); //return a socket
 	//int recv(int s, void *buf, int len, unsigned int flags);
-	
+	if DEBUG puts("entering while");
 	while(true){
 		//accept ou bind
+            
 		servListen();
 	}
 	
-	char[1024]stringBuffer;
-	recvString(0,stringBuffer);
+	char stringBuffer [1024] ;
+	recvString(0, stringBuffer );
 	
 	closeAllSockets();
 	return EXIT_SUCCESS;
