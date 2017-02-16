@@ -51,15 +51,15 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
-typedef struct connection{
+typedef struct connexion{
 	SOCKET sock;
 	hostent* hostinfo;
 	int port;
-}connection_t;
+}connexion_t;
 
-connection_t connections[MAX_CONNEXIONS];
+connexion_t connexions[MAX_CONNEXIONS];
 
-int connectionCount=0;
+int connexionCount=0;
 
 int getInt(void){
 	int tmpInt;
@@ -153,17 +153,32 @@ void connectTo(const char* hostname, int port){
 		exit(errno);
 	}
 	
-	connections[connectionCount].sock=sock;
-	connections[connectionCount].hostinfo=hostinfo;
-	connections[connectionCount].port=port;
+	connexions[connexionCount].sock=sock;
+	connexions[connexionCount].hostinfo=hostinfo;
+	connexions[connexionCount].port=port;
 	
 }
-void sendString(int connectionNumber, char* string){
-	if(send(connections[connectionNumber].sock, string, strlen(string), 0) < 0)
+void sendString(int connexionNumber, char* string){
+	//TODO: interdire les messages au dessus de 1024 chars
+	if(send(connexions[connexionNumber].sock, string, strlen(string), 0) < 0)
 	{
 		perror("send()");
 		exit(errno);
 	}
+}
+
+//WARNING: Attention, recv est bloquant.
+void recvString(int connexionNumber, char* stringBuffer){
+	char buffer[1024]
+	int n = 0;
+
+	if((n = recv(connexions[connexionNumber].sock, buffer, sizeof buffer - 1, 0)) < 0)
+	{
+	perror("recv()");
+	exit(errno);
+	}
+
+	buffer[n] = '\0';
 }
 int mainClient(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
@@ -171,7 +186,54 @@ int mainClient(int argc, char **argv) {
 	connectTo("localhost");
 	sendString(0,"prout");
 	
+	closeAllSockets();
 	return EXIT_SUCCESS;
+}
+void closeAllSockets(){
+	for ( int i=0; i<MAX_CONNEXIONS;i++){
+		if(connexions[i] != NULL ){
+		closesocket(connexions[i].sock);
+		}
+	}
+}
+	
+void servListen(){
+	SOCKADDR_IN sin = { 0 };
+	SOCKET sock;
+	
+	// nous sommes un serveur, nous acceptons n'importe quelle adresse
+	sin.sin_addr.s_addr = htonl(INADDR_ANY); 
+	
+	sin.sin_family = AF_INET;
+	
+	sin.sin_port = htons(DEFAULT_PORT);
+	
+	if(bind (sock, (SOCKADDR *) &sin, sizeof sin) == SOCKET_ERROR)
+	{
+    perror("bind()");
+    exit(errno);
+	}
+	
+	if(listen(sock, 5) == SOCKET_ERROR)
+	{	
+		perror("listen()");
+		exit(errno);
+	}
+	//TODO fermeture de sock ?
+	
+	SOCKADDR_IN csin = { 0 };
+	SOCKET csock;
+	
+	int sinsize = sizeof csin;
+	
+	csock = accept(sock, (SOCKADDR *)&csin, &sinsize);
+	
+	if(csock == INVALID_SOCKET)
+	{
+		perror("accept()");
+		exit(errno);
+	}
+	connexion[connexionCount].sock=csock;
 }
 
 /* longueur_adresse_courante est la longueur d'adresse courante d'un client */
@@ -182,6 +244,16 @@ int mainServer(int argc, char **argv) {
 	//int bind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen);
 	//int accept(int sock, struct sockaddr *adresse, socklen_t *longueur); //return a socket
 	//int recv(int s, void *buf, int len, unsigned int flags);
+	
+	while(true){
+		//accept ou bind
+		servListen();
+	}
+	
+	char[1024]stringBuffer;
+	recvString(0,stringBuffer);
+	
+	closeAllSockets();
 	return EXIT_SUCCESS;
 }
 
