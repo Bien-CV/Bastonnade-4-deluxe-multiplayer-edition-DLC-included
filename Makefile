@@ -1,15 +1,15 @@
 
-CC=gcc
-CFLAGS= -ansi -pedantic
+CC=g++
+CFLAGS=
 LDFLAGS=
-EXEC= main
+EXEC= serverPrototype
 SRC= $(wildcard *.c)
 OBJ= $(SRC:.c=.o)
 
 all: $(EXEC)
 	
 $(EXEC):
-	$(CC) -o $@ $@.c $@.h
+	$(CC) -o $@ $@.c
 
 .PHONY: clean
 

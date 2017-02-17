@@ -55,7 +55,7 @@ typedef struct in_addr IN_ADDR;
 #define DEBUG (true)
 #define BUFFER_SIZE 9999
 #define MAX_CONNEXIONS 1000
-
+#define EXIT_ACTIVATED (false)
 
 typedef struct connexion{
 	SOCKET sock;
@@ -100,7 +100,7 @@ void servListen();
 void closeAllSockets();
 void recvString(int connexionNumber, char* stringBuffer);
 void sendString(int connexionNumber, char* string);
-void connectTo(const char* hostname, int port);
+void connectToSpecificPort(const char* hostname, int port);
 void connectTo(const char* hostname);
 SOCKET newSocket();
 
@@ -160,6 +160,7 @@ void connectTo(const char* hostname){
 	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
 
 	hostinfo = gethostbyname(hostname); /* on récupère les informations de l'hôte auquel on veut se connecter */
+	if DEBUG showHostent(hostinfo);
 	if (hostinfo == NULL) /* l'hôte n'existe pas */
 	{
 		fprintf (stderr, "Unknown host %s.\n", hostname);
@@ -169,7 +170,8 @@ void connectTo(const char* hostname){
 	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr; /* l'adresse se trouve dans le champ h_addr de la structure hostinfo */
 	sin.sin_port = htons(DEFAULT_PORT); /* on utilise htons pour le port */
 	sin.sin_family = AF_INET;
-
+	//if DEBUG printf("sock : %d \n&sin : %d size SOCKADDR :  %u\n",sock, &sin, sizeof(SOCKADDR) );
+	
 	if(connect(sock,(SOCKADDR *) &sin, sizeof(SOCKADDR)) == SOCKET_ERROR)
 	{
 		perror("connect()");
@@ -178,7 +180,7 @@ void connectTo(const char* hostname){
 	return;
 }
 
-void connectTo(const char* hostname, int port){
+void connectToSpecificPort(const char* hostname, int port){
 	SOCKET sock = newSocket();
 	struct hostent *hostinfo = NULL;
 	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
@@ -231,7 +233,8 @@ int mainClient(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
 	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
 	connectTo("localhost");
-        char sentString[] = {'p','r','o','u','t'};
+	
+    char sentString[] = {'p','r','o','u','t'};
 	sendString(0,sentString);
 	
 	closeAllSockets();
@@ -246,8 +249,9 @@ void closeAllSockets(){
 }
 	
 void servListen(){
+	if DEBUG printf("Listening...\n");
 	SOCKADDR_IN sin = { 0 };
-	SOCKET sock;
+	SOCKET sock=0;
 	
 	// nous sommes un serveur, nous acceptons n'importe quelle adresse
 	sin.sin_addr.s_addr = htonl(INADDR_ANY); 
@@ -258,28 +262,31 @@ void servListen(){
 	
 	if(bind (sock, (SOCKADDR *) &sin, sizeof sin) == SOCKET_ERROR)
 	{
-    perror("bind()");
-    exit(errno);
+    if EXIT_ACTIVATED perror("bind()");
+    if EXIT_ACTIVATED exit(errno);
+    return;
 	}
 	
 	if(listen(sock, 5) == SOCKET_ERROR)
 	{	
-		perror("listen()");
-		exit(errno);
+		if EXIT_ACTIVATED perror("listen()");
+		if EXIT_ACTIVATED exit(errno);
+		return;
 	}
 	//TODO fermeture de sock ?
 	
 	SOCKADDR_IN csin = { 0 };
 	SOCKET csock;
 	
-	int sinsize = sizeof csin;
+	unsigned int sinsize = sizeof csin;
 	
 	csock = accept(sock, (SOCKADDR *)&csin, &sinsize);
 	
 	if(csock == INVALID_SOCKET)
 	{
-		perror("accept()");
-		exit(errno);
+		if EXIT_ACTIVATED perror("accept()");
+		if EXIT_ACTIVATED exit(errno);
+		return;
 	}
 	connexions[connexionCount].sock=csock;
 }
@@ -292,9 +299,9 @@ int mainServer(int argc, char **argv) {
 	//int bind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen);
 	//int accept(int sock, struct sockaddr *adresse, socklen_t *longueur); //return a socket
 	//int recv(int s, void *buf, int len, unsigned int flags);
-	if DEBUG puts("entering while");
+	if DEBUG puts("entering server loop");
 	while(true){
-		//accept ou bind
+		//bind
             
 		servListen();
 	}
