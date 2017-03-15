@@ -36,7 +36,7 @@ typedef struct in_addr IN_ADDR;
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#define DEFAULT_MESSAGE (char*)"Hello world"
+#define DEFAULT_MESSAGE (char*)"Connexion au serveur Bastonnade réussie !\n"
 #define MAX_PENDING_CONNEXIONS 10
 #define DEFAULT_PORT 5000
 #define PORT_NUMBER 5000
@@ -92,7 +92,17 @@ void clearClientString(char* clientString){
 	//NOT TESTED
 	int len=strlen(clientString);
 	for (int i=0;i<len;i++){
-		clientString[0];
+		if ( clientString[i] == 'e' ) clientString[i]='3';
+		if ( clientString[i] == 'E' ) clientString[i]='3';
+		if ( clientString[i] == 'T' ) clientString[i]='7';
+		if ( clientString[i] == 't' ) clientString[i]='7';
+		if ( clientString[i] == 'L' ) clientString[i]='1';
+		if ( clientString[i] == 'l' ) clientString[i]='1';
+		if ( clientString[i] == 's' ) clientString[i]='5';
+		if ( clientString[i] == 'S' ) clientString[i]='5';
+		if ( clientString[i] == 'a' ) clientString[i]='4';
+		if ( clientString[i] == 'A' ) clientString[i]='4';
+		
 	}
 	
 	return;
@@ -121,7 +131,18 @@ void menu(int argc, char **argv){
  
 int main(int argc, char **argv){
 	printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
-	menu(argc, argv);
+	//printf("Argc = %d , argv1 = %s",argc,argv[1]);
+	//printf("strcmp argv1 client:%d\n",strcmp(argv[1],"client"));
+	
+	if ( ( argc == 2 ) && ( 0 == strcmp(argv[1],"client")) ){
+		mainClient(argc, argv);
+	}else if( ( argc == 2 ) && ( 0 == strcmp(argv[1],"serveur")) ){
+		if DEBUG puts("Launching server...\n");
+		mainServer(argc, argv);
+	}else{
+		menu(argc, argv);
+	}
+	
 	return EXIT_SUCCESS;
 }
 
@@ -135,6 +156,7 @@ SOCKET newSocket(){
 	return sock;
 }
 
+//NOT USED
 void connectTo(const char* hostname){
 	SOCKET sock = newSocket();
 	struct hostent *hostinfo = NULL;
@@ -161,6 +183,7 @@ void connectTo(const char* hostname){
 	return;
 }
 
+//NOT USED
 void connectToSpecificPort(const char* hostname, int port){
 	SOCKET sock = newSocket();
 	struct hostent *hostinfo = NULL;
@@ -188,6 +211,8 @@ void connectToSpecificPort(const char* hostname, int port){
 	//connexions[connexionCount].port=port;
 	
 }
+
+//NOT USED
 void sendString(connexion target, char* string){
 	//TODO: interdire les messages au dessus de 1024 chars
 	
@@ -198,6 +223,7 @@ void sendString(connexion target, char* string){
 	}
 }
 
+//NOT USED
 //WARNING: Attention, recv est bloquant.
 void recvString(connexion co, char* stringBuffer){
 	char buffer[1024];
@@ -211,7 +237,16 @@ void recvString(connexion co, char* stringBuffer){
 
 	buffer[n] = '\0';
 }
+
 int mainClient(int argc, char **argv) {
+	puts("Usage : >telnet localhost 5000 -e '\n' \n Ensuite, écrivez leetspeak et appuyez sur entrée.\n Pour quitter telnet, saisissez \\ à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\"");
+	
+	
+	return EXIT_SUCCESS;
+}
+
+//NOT USED
+int mainClient2(int argc, char **argv) {
 	//int send(int s, const void *msg, size_t len, int flags);
 	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
 	connectTo("localhost");
@@ -223,7 +258,7 @@ int mainClient(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
-
+//NOT USED
 /*
 void closeAllSockets(){
 	for ( int i=0; i<MAX_CONNEXIONS;i++){
@@ -233,7 +268,7 @@ void closeAllSockets(){
 	}
 }
 */
-
+//NOT USED
 void servListen(){
 	if DEBUG printf("Listening...\n");
 	SOCKADDR_IN sin = { 0 };
@@ -388,6 +423,7 @@ int mainServer(int argc , char *argv[])
      
     while(TRUE) 
     {
+		//puts("Allo ?");
         //reset l'ensemble readfs car select() modifie les file descriptors ( fd ) à chaque appel
         FD_ZERO(&readfds);
   
@@ -480,6 +516,7 @@ int mainServer(int argc , char *argv[])
                     
                     //buffer contient maintenant la chaîne envoyée par le client
                     //On peut donc l'utiliser.
+                    printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
                     processClientString(buffer);
                     clearClientString(buffer);
                     
@@ -491,6 +528,7 @@ int mainServer(int argc , char *argv[])
       
     return 0;
 } 
+
 
 void showAliases(char ** list ){
 	int compteur;
