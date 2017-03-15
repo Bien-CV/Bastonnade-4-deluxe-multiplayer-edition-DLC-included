@@ -62,9 +62,16 @@ int mainClient(int argc, char **argv);
 int mainServer(int argc, char **argv);
 int getInt(void);
 void menu(int argc, char **argv);
+void renvoi(int sock);
 void showAddrList(char ** list );
 void showHostent(hostent* h);
 void showAliases(char ** list );
+void servListen();
+//void closeAllSockets();
+void recvString(int connexionNumber, char* stringBuffer);
+//void sendString(int connexionNumber, char* string);
+void connectToSpecificPort(const char* hostname, int port);
+void connectTo(const char* hostname);
 SOCKET newSocket();
 
 int getInt(void){
@@ -148,13 +155,207 @@ SOCKET newSocket(){
 	return sock;
 }
 
+//NOT USED
+void connectTo(const char* hostname){
+	SOCKET sock = newSocket();
+	struct hostent *hostinfo = NULL;
+	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
+
+	hostinfo = gethostbyname(hostname); /* on récupère les informations de l'hôte auquel on veut se connecter */
+	if DEBUG showHostent(hostinfo);
+	if (hostinfo == NULL) /* l'hôte n'existe pas */
+	{
+		fprintf (stderr, "Unknown host %s.\n", hostname);
+		exit(EXIT_FAILURE);
+	}
+
+	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr; /* l'adresse se trouve dans le champ h_addr de la structure hostinfo */
+	sin.sin_port = htons(DEFAULT_PORT); /* on utilise htons pour le port */
+	sin.sin_family = AF_INET;
+	//if DEBUG printf("sock : %d \n&sin : %d size SOCKADDR :  %u\n",sock, &sin, sizeof(SOCKADDR) );
+	
+	if(connect(sock,(SOCKADDR *) &sin, sizeof(SOCKADDR)) == SOCKET_ERROR)
+	{
+		perror("connect()");
+		exit(errno);
+	}
+	return;
+}
+
+//NOT USED
+void connectToSpecificPort(const char* hostname, int port){
+	SOCKET sock = newSocket();
+	struct hostent *hostinfo = NULL;
+	SOCKADDR_IN sin = { 0 }; /* initialise la structure avec des 0 */
+
+	hostinfo = gethostbyname(hostname); /* on récupère les informations de l'hôte auquel on veut se connecter */
+	if (hostinfo == NULL) /* l'hôte n'existe pas */
+	{
+		fprintf (stderr, "Unknown host %s.\n", hostname);
+		exit(EXIT_FAILURE);
+	}
+
+	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr; /* l'adresse se trouve dans le champ h_addr de la structure hostinfo */
+	sin.sin_port = htons(port); /* on utilise htons pour le port */
+	sin.sin_family = AF_INET;
+
+	if(connect(sock,(SOCKADDR *) &sin, sizeof(SOCKADDR)) == SOCKET_ERROR)
+	{
+		perror("connect()");
+		exit(errno);
+	}
+	
+	//connexions[connexionCount].sock=sock;
+	//connexions[connexionCount].hostinfo=hostinfo;
+	//connexions[connexionCount].port=port;
+	
+}
+
+//NOT USED
+void sendString(connexion target, char* string){
+	//TODO: interdire les messages au dessus de 1024 chars
+	
+	if(send(target.sock, string, strlen(string), 0) < 0)
+	{
+		perror("send()");
+		exit(errno);
+	}
+}
+
+//NOT USED
+//WARNING: Attention, recv est bloquant.
+void recvString(connexion co, char* stringBuffer){
+	char buffer[1024];
+	int n = 0;
+
+	if((n = recv(co.sock, buffer, sizeof buffer - 1, 0)) < 0)
+	{
+	perror("recv()");
+	exit(errno);
+	}
+
+	buffer[n] = '\0';
+}
+
 int mainClient(int argc, char **argv) {
-	puts("Usage : >telnet localhost 5000 \n Ensuite, écrivez leetspeak et appuyez  entrée.\n Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
+	puts("Usage : >telnet localhost 5000 -e '\n' \n Ensuite, écrivez leetspeak et appuyez sur entrée.\n Pour quitter telnet, saisissez \\ à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\"");
 	
 	
 	return EXIT_SUCCESS;
 }
 
+//NOT USED
+int mainClient2(int argc, char **argv) {
+	//int send(int s, const void *msg, size_t len, int flags);
+	//int connect(int sockfd, struct sockaddr *serv_addr, socklen_t addrlen);
+	connectTo("localhost");
+	
+    char sentString[] = {'p','r','o','u','t'};
+	//sendString(serverConnexion,sentString);
+	
+	
+	return EXIT_SUCCESS;
+}
+
+//NOT USED
+/*
+void closeAllSockets(){
+	for ( int i=0; i<MAX_CONNEXIONS;i++){
+		if(connexions[i].port != 0 ){
+		closesocket(connexions[i].sock);
+		}
+	}
+}
+*/
+//NOT USED
+void servListen(){
+	if DEBUG printf("Listening...\n");
+	SOCKADDR_IN sin = { 0 };
+	SOCKET sock=0;
+	
+	// nous sommes un serveur, nous acceptons n'importe quelle adresse
+	sin.sin_addr.s_addr = htonl(INADDR_ANY); 
+	
+	sin.sin_family = AF_INET;
+	
+	sin.sin_port = htons(DEFAULT_PORT);
+	
+	if(bind (sock, (SOCKADDR *) &sin, sizeof sin) == SOCKET_ERROR)
+	{
+    if EXIT_ACTIVATED perror("bind()");
+    if EXIT_ACTIVATED exit(errno);
+    return;
+	}
+	
+	if(listen(sock, 5) == SOCKET_ERROR)
+	{	
+		if EXIT_ACTIVATED perror("listen()");
+		if EXIT_ACTIVATED exit(errno);
+		return;
+	}
+	//TODO fermeture de sock ?
+	
+	SOCKADDR_IN csin = { 0 };
+	SOCKET csock;
+	
+	unsigned int sinsize = sizeof csin;
+	
+	csock = accept(sock, (SOCKADDR *)&csin, &sinsize);
+	
+	if(csock == INVALID_SOCKET)
+	{
+		if EXIT_ACTIVATED perror("accept()");
+		if EXIT_ACTIVATED exit(errno);
+		return;
+	}
+	//connexions[connexionCount].sock=csock;
+}
+
+
+//NOT USED
+/* longueur_adresse_courante est la longueur d'adresse courante d'un client */
+/* ptr_hote = les infos recuperees sur la machine hote */ 
+/* ptr_service = les infos recuperees sur le service de la machine */
+/* machine = nom de la machine locale */
+int mainServer2(int argc, char **argv) {
+	//int bind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen);
+	//int accept(int sock, struct sockaddr *adresse, socklen_t *longueur); //return a socket
+	//int recv(int s, void *buf, int len, unsigned int flags);
+	//int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout); 
+	if DEBUG puts("Entering server main");
+	int selectReturnValue; // Si pas d'erreur, est le nombre total de fd encore présents.
+	
+	SOCKET sock=newSocket();
+	SOCKET largestSock= sock;
+    fd_set readfs;// ensemble des sockets surveillés pour lire des données
+    
+
+    
+	while(true){
+		FD_ZERO(&readfs);//reset l'ensemble readfs car select() modifie les fd à chaque appel
+        FD_SET(sock, &readfs);//Ajoute sock à l'ensemble readfs
+		if((selectReturnValue = select(largestSock + 1, &readfs, NULL, NULL, NULL)) < 0)//select ici
+		{
+		perror("select()");
+		//peut renvoyer -1 avec errno positionné à EINTR ou EAGAIN (EWOULDBLOCK) ce qui ne relève pas d'une erreur. 
+		//exit(errno);
+		}
+		
+		if(FD_ISSET(sock, &readfs))
+		{
+		/* des données sont disponibles sur le socket */
+		/* traitement des données */
+		}
+		
+		//servListen();
+	}
+	
+	//char stringBuffer [1024] ;
+	//recvString(0, stringBuffer );
+	
+	//closeAllSockets();
+	return EXIT_SUCCESS;
+}
 
 int mainServer(int argc , char *argv[])
 {
