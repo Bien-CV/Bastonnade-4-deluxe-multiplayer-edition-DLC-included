@@ -280,7 +280,7 @@ void menu(int argc, char **argv){
   
  
  
-int main(int argc, char **argv){
+void main(int argc, char **argv){
 	
 	printWelcomeMessage(AFFICHAGE_EXCENTRIQUE);
 	
@@ -296,7 +296,7 @@ int main(int argc, char **argv){
 		menu(argc, argv);
 	}
 	
-	return EXIT_SUCCESS;
+	return;
 }
 
 SOCKET newSocket(){
