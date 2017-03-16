@@ -268,8 +268,10 @@ void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
 	r = rand()%6;
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+		lobby[roomNumber].currentPlayer = idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+		lobby[roomNumber].currentPlayer = idPlayer1;
 	}
 
 	giveRoomInfo(sd,roomNumber,lobby);
@@ -281,8 +283,10 @@ void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
 	r = rand()%11;
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+		lobby[roomNumber].currentPlayer = idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+		lobby[roomNumber].currentPlayer = idPlayer1;
 	}
 
 	giveRoomInfo(sd,roomNumber,lobby);
@@ -296,9 +300,11 @@ void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
+		lobby[roomNumber].currentPlayer = idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
+		lobby[roomNumber].currentPlayer = idPlayer1;
 	}
 
 	giveRoomInfo(sd,roomNumber,lobby);
