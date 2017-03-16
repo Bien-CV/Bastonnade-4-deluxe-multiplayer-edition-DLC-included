@@ -253,61 +253,51 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	//sendTo("p1=%d p2=%d ",room->p1,room->p2);
 	//sendTo("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
 }
-<<<<<<< HEAD
 
-void attaqueNormale(SOCKET sd,int roomNumber){
+/*
+ * Fonctions des différentes attaques
+ */
+void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
 	// prévenir l'autre joueur
 	//appliquer dégats
 	int r;
 	r = rand()%6;
-	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
-		roomNumber->p2 = p2 - r;
+	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
 	} else {
-		roomNumber->p1 = p1 - r;
+		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
 	}
 
-	giveRoomInfo(sd,roomNumber);
-	return;
-}
-
-void attaqueRisquee(SOCKET sd,int roomNumber){
-	int r;
-	r = rand()%11;
-	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
-		roomNumber->p2 = p2 - r;
-	} else {
-		roomNumber->p1 = p1 - r;
-	}
-
-	giveRoomInfo(sd,roomNumber);
-
-	return;
-}
-
-void attaqueSuicide(SOCKET sd,int roomNumber){
-	int r;
-	r = rand();
-	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
-		roomNumber->p2 = p2 - r%16;
-		roomNumber->p1 = p1 - r%10;
-	} else {
-		roomNumber->p1 = p1 - r%16;
-		roomNumber->p2 = p2 - r%10;
-	}
-
-	giveRoomInfo(sd,roomNumber);
-
-=======
-void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
-	//appliquer dégats
 	giveRoomInfo(sd,roomNumber,lobby);
 	return;
 }
+
 void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
+	int r;
+	r = rand()%11;
+	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+	} else {
+		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+	}
+
+	giveRoomInfo(sd,roomNumber,lobby);
+
 	return;
 }
+
 void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
->>>>>>> af10e751ec08ddf6c2a8dbdfd24846f0ec9724c6
+	int r;
+	r = rand();
+	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
+		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
+	} else {
+		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
+		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
+	}
+
+	giveRoomInfo(sd,roomNumber,lobby);
 	return;
 }
 
