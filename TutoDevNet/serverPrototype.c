@@ -23,6 +23,7 @@
 #include <linux/types.h>
 #include <unistd.h> /* close */
 #include <netdb.h> /* gethostbyname */
+#include <math.h> /* random */ 
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 #define closesocket(s) close(s)
@@ -564,4 +565,139 @@ void showHostent(hostent* h){
 	printf("h_length:%d\n",h->h_length);
 	showAddrList(h->h_addr_list);
 	
+}
+
+/***********************
+ *
+ * Partie jeu
+ *
+ ***********************/
+
+// Fonction pour changer le tour des joueurs
+void change_player(int *player){
+	if(*player==1){
+		*player = 2;
+	} else {
+		*player = 1;
+	}
+}
+
+// Clean la chaine de caractères entrée par l'utilisateur
+int clean_stdin() {
+    while (getchar()!='\n');
+    return 1;
+}
+
+// Fonction pour afficher les choix du joueur lors de son tour de jeu
+void play(){
+	// Affichage des choix
+	// printf("0 - Passer son tour\n");
+	// Dégats ingligés par les attaques à définir
+	// Inflige des dégats entre 1 et 5
+	printf("\n1 - Attaque normale\n");
+	// Inflige des dégats entre 1 et 10
+	printf("2 - Attaque risquée\n");
+	// Inflige des dégats à l'adversaire et à soi même
+	printf("3 - Attaque suicide\n");
+	
+	// Vérification de l'entrée utilisateur, si le choix fait parti de ceux proposés
+	int choice =0;  
+	char c;
+	do {  
+		printf("Choisir une action : ");
+	} while (((scanf("%d%c", &choice, &c)!=2 || c!='\n') && clean_stdin()) || choice<1 || choice>3);
+	
+	// Tour de jeu du joueur 1
+	if(player==1){
+		if(choice==1) {
+			r = rand()%6;	
+			room->p2 = room->p2 - r;
+		} else if(choice==2) {
+			r = rand()%11;	
+			room->p2 = room->p2 - r;
+			room->p1 = room->p1 - rand()%6;
+		} else if(choice==3) {
+			r = rand()%16;	
+			room->p2 = room->p2 - r;
+			room->p1 = room->p1 - rand()%11;
+		}			
+	}
+
+	// Tour de jeu du joueur 2 
+	if(player==2){
+		if(choice==1) {
+			r = rand()%6;	
+			room->p1 = room->p1 - r;
+		}
+		if(choice==2) {
+			r = rand()%11;	
+			room->p1 = room->p1 - r;
+			room->p2 = room->p2 - rand()%6;
+		}
+		if(choice==3) {
+			r = rand()%16;	
+			room->p1 = room->p1 - r;
+			room->p2 = room->p2 - rand()%10;
+		}			
+	}
+
+	// Affichage des dégats
+	if(r==0){
+		printf("\nAttaque ratée !");
+	} else {
+		printf("\nDégats ingligés : -");
+		printf("%d", r);
+	}
+
+	// Un des joueurs n'a plus de vie
+	if(room->p1<=0 || room->p2<=0){
+		endGame=1;
+	}
+	
+	if(room->p1<0){
+		room->p1=0;
+	}
+
+	if(room->p2<0){
+		room->p2=0;
+	}
+
+	printf("\nVie du joueur 1: ");
+	printf("%d",room->p1);
+	printf("\nVie du joueur 2: ");
+	printf("%d",room->p2);
+	printf("\n");
+
+	// Fonction pour changer de joueur
+	change_player(&player);
+}
+
+int game(){
+
+	// Tant que les 2 joueurs ont des points de vie
+	while(!endGame){
+		printf("\nAu tour du joueur ");
+		printf("%d",player);		
+		play();
+
+		if(room->p1<=0){
+			printf("\nLe gagnant est le joueur 2 !");
+		} else if (room->p2<=0){
+			printf("\nLe gagnant est le joueur 1 !");
+		}
+
+		// Relancer une partie ou quitter
+		/*char answer;
+		char c;
+		printf("\nVoulez-vous-rejouer ? (o/n)");
+		do {  
+			printf("Veuillez entrer o ou n");
+		} while (((scanf("%c", &answer, &c)!=2 || c!='\n') && clean_stdin()) || answer=="o" || answer=="n");
+		if(answer=="o") {
+			endGame=!endGame;
+			p1=10;
+			p2=10;
+			player=1;
+		}*/
+	}
 }
