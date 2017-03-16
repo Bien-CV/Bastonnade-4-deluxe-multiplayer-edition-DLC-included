@@ -70,7 +70,7 @@ typedef struct room{
 	int p2;//Points de vie du joueur 2
 	SOCKET idPlayer1;//Socket descriptor du joueur 1
 	SOCKET idPlayer2;//Socket descriptor du joueur 2
-	SOCKET nextPlayerID;
+	SOCKET currentPlayer;
 }room_t;
 
 typedef room_t* lobby;
@@ -80,8 +80,7 @@ void initRoom(room_t* room, int maxHP){
 	room->p2=maxHP;
 	room->idPlayer1=0;
 	room->idPlayer2=0;
-	room->nextPlayerID=0;
-	
+	room->currentPlayer=0;	
 }
 
 void printRoom(room_t* room){
@@ -560,7 +559,7 @@ int mainServer(int argc , char *argv[])
     addrlen = sizeof(address);
     
     
-    puts("En attente de connections ...");
+    puts("En attente de connexions ...");
      
     while(TRUE) 
     {
@@ -605,7 +604,7 @@ int mainServer(int argc , char *argv[])
             }
           
             //inform user of socket number - used in send and receive commands
-            printf("Nouvelle connection, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+            printf("Nouvelle connexion, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
         
             //Envoi du message de bienvenue
             if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
@@ -629,14 +628,14 @@ int mainServer(int argc , char *argv[])
             }
         }
           
-        //Si ce n'est pas une nouvelle connection sur le socket principal alors c'est une opération d'entrée ou sortie sur un socket quelqconque
+        //Si ce n'est pas une nouvelle connexion sur le socket principal alors c'est une opération d'entrée ou sortie sur un socket quelqconque
         for (i = 0; i < max_clients; i++) 
         {
             sd = client_socket[i];
               
             if (FD_ISSET( sd , &readfds)) 
             {
-                //Vérifie si c'était une fermeture de connection et lit le message entrant
+                //Vérifie si c'était une fermeture de connexion et lit le message entrant
                 if ((valread = read( sd , buffer, READ_BUFFER_SIZE )) == 0)
                 {
                     //Quelqu'un s'est déconnecté, affiche les détails
@@ -709,11 +708,11 @@ void showHostent(hostent* h){
  ***********************/
 
 // Fonction pour changer le tour des joueurs
-void change_player(int *player){
-	if(*player==1){
-		*player = 2;
+void change_player(room_t* room){
+	if(room->currentPlayer==room->idPlayer1){
+		room->currentPlayer = room->idPlayer2;
 	} else {
-		*player = 1;
+		room->currentPlayer = room->idPlayer1;
 	}
 }
 
@@ -724,7 +723,8 @@ int clean_stdin() {
 }
 
 // Fonction pour afficher les choix du joueur lors de son tour de jeu
-void play(){
+void play(room_t* room){
+	int r;
 	// Affichage des choix
 	// printf("0 - Passer son tour\n");
 	// Dégats ingligés par les attaques à définir
@@ -743,7 +743,7 @@ void play(){
 	} while (((scanf("%d%c", &choice, &c)!=2 || c!='\n') && clean_stdin()) || choice<1 || choice>3);
 	
 	// Tour de jeu du joueur 1
-	if(player==1){
+	if(room->currentPlayer==room->idPlayer1){
 		if(choice==1) {
 			r = rand()%6;	
 			room->p2 = room->p2 - r;
@@ -759,7 +759,7 @@ void play(){
 	}
 
 	// Tour de jeu du joueur 2 
-	if(player==2){
+	if(room->currentPlayer==room->idPlayer2){
 		if(choice==1) {
 			r = rand()%6;	
 			room->p1 = room->p1 - r;
@@ -784,11 +784,7 @@ void play(){
 		printf("%d", r);
 	}
 
-	// Un des joueurs n'a plus de vie
-	if(room->p1<=0 || room->p2<=0){
-		endGame=1;
-	}
-	
+	// Un des joueurs n'a plus de vie	
 	if(room->p1<0){
 		room->p1=0;
 	}
@@ -804,22 +800,21 @@ void play(){
 	printf("\n");
 
 	// Fonction pour changer de joueur
-	change_player(&player);
+	change_player(room);
 }
 
-int game(){
-
+int game(room_t* room){
 	// Tant que les 2 joueurs ont des points de vie
-	while(!endGame){
-		printf("\nAu tour du joueur ");
-		printf("%d",player);		
-		play();
+	while(room->p1 > 0 || room->p2 > 0){
+		//printf("\nAu tour du joueur ");
+		//printf("%d",room->currentPlayer);		
+		play(room);
 
-		if(room->p1<=0){
+		/*if(room->p1<=0){
 			printf("\nLe gagnant est le joueur 2 !");
 		} else if (room->p2<=0){
 			printf("\nLe gagnant est le joueur 1 !");
-		}
+		}*/
 
 		// Relancer une partie ou quitter
 		/*char answer;
