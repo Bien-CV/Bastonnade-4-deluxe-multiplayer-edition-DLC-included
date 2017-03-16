@@ -262,15 +262,49 @@ void giveRoomInfo(SOCKET sd,int roomNumber){
 	//sendTo("p1=%d p2=%d ",room->p1,room->p2);
 	//sendTo("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
 }
+
 void attaqueNormale(SOCKET sd,int roomNumber){
+	// prévenir l'autre joueur
 	//appliquer dégats
+	int r;
+	r = rand()%6;
+	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
+		roomNumber->p2 = p2 - r;
+	} else {
+		roomNumber->p1 = p1 - r;
+	}
+
 	giveRoomInfo(sd,roomNumber);
 	return;
 }
+
 void attaqueRisquee(SOCKET sd,int roomNumber){
+	int r;
+	r = rand()%11;
+	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
+		roomNumber->p2 = p2 - r;
+	} else {
+		roomNumber->p1 = p1 - r;
+	}
+
+	giveRoomInfo(sd,roomNumber);
+
 	return;
 }
+
 void attaqueSuicide(SOCKET sd,int roomNumber){
+	int r;
+	r = rand();
+	if(sd == roomNumber->currentPlayer && sd == idPlayer1){
+		roomNumber->p2 = p2 - r%16;
+		roomNumber->p1 = p1 - r%10;
+	} else {
+		roomNumber->p1 = p1 - r%16;
+		roomNumber->p2 = p2 - r%10;
+	}
+
+	giveRoomInfo(sd,roomNumber);
+
 	return;
 }
 
@@ -743,7 +777,7 @@ void play(room_t* room){
 	} while (((scanf("%d%c", &choice, &c)!=2 || c!='\n') && clean_stdin()) || choice<1 || choice>3);
 	
 	// Tour de jeu du joueur 1
-	if(room->currentPlayer==room->idPlayer1){
+	/*if(room->currentPlayer==room->idPlayer1){
 		if(choice==1) {
 			r = rand()%6;	
 			room->p2 = room->p2 - r;
@@ -774,7 +808,7 @@ void play(room_t* room){
 			room->p1 = room->p1 - r;
 			room->p2 = room->p2 - rand()%10;
 		}			
-	}
+	}*/
 
 	// Affichage des dégats
 	if(r==0){
