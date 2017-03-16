@@ -398,15 +398,15 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 				if ( strcmp(instructions[2],"normale") == 0 ){
 					attaqueNormale(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
-					if DEBUG printRoom(&(lobby[roomNumber]));
+					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"risquée") == 0 ){
 					attaqueRisquee(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
-					if DEBUG printRoom(&(lobby[roomNumber]));
+					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"suicide") == 0 ){
 					attaqueSuicide(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
-					if DEBUG printRoom(&(lobby[roomNumber]));
+					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}
 				
 		}else if (strcmp(instructions[0],"/R")==0){
@@ -418,7 +418,7 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 				roomNumber=atoi(instructions[1]);
 				joinRoom(sd,roomNumber,lobby);
 				if DEBUG printf("Joueur %d entre dans la room %d",sd,roomNumber);
-				if DEBUG printRoom(&(lobby[roomNumber]));
+				if DEBUG printRoomNL(&(lobby[roomNumber]));
 		}
 		
 		
