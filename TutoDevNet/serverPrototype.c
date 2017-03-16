@@ -39,6 +39,7 @@ typedef struct in_addr IN_ADDR;
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <assert.h>
 #define AFFICHAGE_EXCENTRIQUE 1
 #define DEFAULT_MESSAGE (char*)"Connexion au serveur Bastonnade réussie !\n"
 #define MAX_PENDING_CONNEXIONS 10
@@ -115,6 +116,53 @@ void victoryMessage(SOCKET winner){
 	sendTo(winner , "Vous avez gagné!");
 }
 
+char** str_split(char* a_str, const char a_delim)
+{
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
 
 //On itère sur toutes rooms quand un joueur part afin de vérifier dans quelles rooms il était présent.
 //Sous-optimal, devrait être fait régulièrement mais pas à très haute-fréquence
@@ -191,7 +239,7 @@ int getInt(void){
 		return ERROR_INT;
 	}
 }
-void processClientString(char* clientString){
+void leetspeaker(char* clientString){
 	int len=strlen(clientString);
 	for (int i=0;i<len;i++){
 		if ( clientString[i] == 'e' ) clientString[i]='3';
@@ -208,6 +256,51 @@ void processClientString(char* clientString){
 	}
 	return;
 }
+
+void processClientString(SOCKET sd, char* s,lobby lobby){
+	char** instructions;
+	int roomNumber;
+	char* originalMessage;
+	strcpy(originalMessage,s);
+	instructions = str_split(s, ' ');
+	if (instructions!=NULL)
+    {
+		if (strcmp(instructions[0],"R")==0){
+				roomNumber=atoi(instructions[1]);
+				if ( strcmp(instructions[2],"normale") == 0 ){
+					attaqueNormale(sd,roomNumber);
+				}else if ( strcmp(instructions[2],"risquée") == 0 ){
+					attaqueRisquee(sd,roomNumber);
+				}else if ( strcmp(instructions[2],"suicide") == 0 ){
+					attaqueSuicide(sd,roomNumber);
+				}
+				
+		}else if (strcmp(instructions[0],"\R")==0){
+				roomNumber=atoi(instructions[1]);
+				if(lobby[roomNumber].idPlayer1==sd){
+					sendTo(lobby[roomNumber].idPlayer2,originalMessage);
+				}else if(lobby[roomNumber].idPlayer2==sd){
+					sendTo(lobby[roomNumber].idPlayer1,originalMessage);
+				}
+					
+		}else if (strcmp(instructions[0],"join")==0){
+				roomNumber=atoi(instructions[1]);
+				joinRoom(sd,roomNumber);
+		}
+		
+		
+		
+        int i;
+        for (i = 0; instructions[i]; i++)
+        {
+            
+            free(tokens[i]);
+        }
+    free(tokens);
+    }
+	return;
+}
+
 void print_image(FILE *fptr){
 		char read_string[MAX_WELCOME_LEN];
 	 
@@ -364,7 +457,12 @@ SOCKET newSocket(){
 int mainClient(int argc, char **argv) {
 	puts("\n\n\n\n\n\n\n\n\n\n");
 	puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
-	puts("Ensuite, écrivez leetspeak et appuyez  entrée.\n\n ");
+	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
+	puts("Pour rejoindre la room 1234 : join 1234\n ");
+	puts("Pour executer une attaque normale dans la room 1234 : R 1234 normale\n ");
+	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
+	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
+	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
 	puts("Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
 	
 	
@@ -534,7 +632,7 @@ int mainServer(int argc , char *argv[])
                     //buffer contient maintenant la chaîne envoyée par le client
                     //On peut donc l'utiliser.
                     printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
-                    processClientString(buffer);                    
+                    processClientString(sd,buffer);                    
                     send(sd , buffer , strlen(buffer) , 0 );
                 }
             }
