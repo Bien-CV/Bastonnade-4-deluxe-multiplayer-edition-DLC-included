@@ -96,9 +96,31 @@ void sendTo(SOCKET client,const char* msg){
 	send(client , msg , strlen(msg) , 0 );
 }
 
+
 void victoryMessage(SOCKET winner){
 	sendTo(winner , "Vous avez gagné!");
 }
+
+void defeatMessage(SOCKET winner){
+	sendTo(winner , "Vous avez perdu!");
+}
+bool gameEnded(int roomNumber, lobby lobby){
+	if(lobby[roomNumber].p1<=0){
+		victoryMessage(lobby[roomNumber].idPlayer2);
+		defeatMessage(lobby[roomNumber].idPlayer1);
+		clearRoom(&(lobby[roomNumber]));
+		return true;
+	}
+	if(lobby[roomNumber].p2<=0){
+		victoryMessage(lobby[roomNumber].idPlayer1);
+		defeatMessage(lobby[roomNumber].idPlayer2);
+		clearRoom(&(lobby[roomNumber]));
+		return true;
+	}
+	return false;
+}
+
+
 
 char** str_split(char* a_str, const char a_delim)
 {
@@ -266,23 +288,29 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	sendTo(lobby[roomNumber].currentPlayer,"It's your turn to play.\n");
 }
 	
+	
+void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
+	if(gameEnded(roomNumber,lobby)){
+		return;
+	}
+	notifyCurrentPlayer(roomNumber,lobby);
+	giveRoomInfo(sd,roomNumber,lobby);
+}
 /*
  * Fonctions des différentes attaques
  */
 void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
-	// prévenir l'autre joueur
-	//appliquer dégats
 	int r;
 	r = rand()%6;
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
-		lobby[roomNumber].currentPlayer = idPlayer2;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
-		lobby[roomNumber].currentPlayer = idPlayer1;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
 	}
-
-	giveRoomInfo(sd,roomNumber,lobby);
+	
+	endOfAttackingPhase(sd,roomNumber,lobby);
 	return;
 }
 
@@ -291,13 +319,13 @@ void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
 	r = rand()%11;
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
-		lobby[roomNumber].currentPlayer = idPlayer2;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
-		lobby[roomNumber].currentPlayer = idPlayer1;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
 	}
 
-	giveRoomInfo(sd,roomNumber,lobby);
+	endOfAttackingPhase(sd,roomNumber,lobby);
 
 	return;
 }
@@ -308,14 +336,14 @@ void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
-		lobby[roomNumber].currentPlayer = idPlayer2;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
 	} else {
 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
-		lobby[roomNumber].currentPlayer = idPlayer1;
+		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
 	}
 
-	giveRoomInfo(sd,roomNumber,lobby);
+	endOfAttackingPhase(sd,roomNumber,lobby);
 	return;
 }
 void startGame( int roomNumber,lobby lobby){
