@@ -280,7 +280,7 @@ void menu(int argc, char **argv){
   
  
  
-void main(int argc, char **argv){
+int main(int argc, char **argv){
 	
 	printWelcomeMessage(AFFICHAGE_EXCENTRIQUE);
 	
@@ -296,7 +296,7 @@ void main(int argc, char **argv){
 		menu(argc, argv);
 	}
 	
-	return;
+	return EXIT_SUCCESS;
 }
 
 SOCKET newSocket(){
@@ -311,7 +311,9 @@ SOCKET newSocket(){
 
 int mainClient(int argc, char **argv) {
 	puts("\n\n\n\n\n\n\n\n\n\n");
-	puts("\nPour jouer, utilisez la commande suivante :\n\n telnet localhost 5000 \n\n localhost doit être l'adresse d'un serveur Bastonnade. \n\n\n Ensuite, écrivez leetspeak et appuyez  entrée.\n\n Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
+	puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
+	puts("Ensuite, écrivez leetspeak et appuyez  entrée.\n\n ");
+	puts("Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
 	
 	
 	return EXIT_SUCCESS;
