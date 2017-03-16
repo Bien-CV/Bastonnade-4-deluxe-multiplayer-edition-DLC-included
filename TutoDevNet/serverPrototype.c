@@ -273,6 +273,20 @@ SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
 	}
 	return sd;
 }
+void sendLobby(SOCKET sd , lobby lobby){
+	int i;
+	sendTo(sd," __________________________________________________________ \n");
+	printf("|~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ |\n");
+	printf("| Room number                 Room details                 |\n");
+	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
+		printf("|");
+		printf("%11d | ",i);
+		printRoom(&(lobby[i]));
+		printf("         |");
+		printf("\n");
+	}
+	printf("|__________________________________________________________|\n");
+}
 
 void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	char buffer [MAX_ROOM_INFO_BUFFER];
@@ -366,10 +380,6 @@ void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
 		return;
 	}
 	sendTo(sd,"La room n'est pas libre.\n");
-	//si player1 vide alors sd devient player1
-	//return 
-	//si player2 vide alors sd devient player2
-	
 	
 	return;
 }
@@ -387,19 +397,28 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 				roomNumber=atoi(instructions[1]);
 				if ( strcmp(instructions[2],"normale") == 0 ){
 					attaqueNormale(sd,roomNumber,lobby);
+					if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
+					if DEBUG printRoom(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"risquée") == 0 ){
 					attaqueRisquee(sd,roomNumber,lobby);
+					if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
+					if DEBUG printRoom(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"suicide") == 0 ){
 					attaqueSuicide(sd,roomNumber,lobby);
+					if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
+					if DEBUG printRoom(&(lobby[roomNumber]));
 				}
 				
 		}else if (strcmp(instructions[0],"/R")==0){
 				roomNumber=atoi(instructions[1]);
 				sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
+				if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
 									
 		}else if (strcmp(instructions[0],"join")==0){
 				roomNumber=atoi(instructions[1]);
 				joinRoom(sd,roomNumber,lobby);
+				if DEBUG printf("Joueur %d entre dans la room %d",sd,roomNumber);
+				if DEBUG printRoom(&(lobby[roomNumber]));
 		}
 		
 		
