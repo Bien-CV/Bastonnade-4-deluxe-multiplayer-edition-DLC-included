@@ -1,20 +1,3 @@
-/*
- ============================================================================
- Name        : ReseauM1.c
- Author      : 
- Version     :
- Copyright   : 
- Description : 
- ============================================================================
- */
-
-/*----------------------------------------------
- Serveur à lancer avant le client
- * 
- * TODO : Utiliser select, qui a de meilleures performances pour les grands nombres de clients.
- * 
- ------------------------------------------------*/
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>/* timeval */
@@ -70,7 +53,7 @@ typedef struct room{
 	int p2;//Points de vie du joueur 2
 	SOCKET idPlayer1;//Socket descriptor du joueur 1
 	SOCKET idPlayer2;//Socket descriptor du joueur 2
-	SOCKET currentPlayer;
+	SOCKET currentPlayer;//Joueur dont c'est le tour de jouer
 }room_t;
 
 typedef room_t* lobby;
@@ -255,26 +238,34 @@ void leetspeaker(char* clientString){
 	}
 	return;
 }
-
-void giveRoomInfo(SOCKET sd,int roomNumber){
+SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
+	if ( (lobby[roomNumber].idPlayer1) == sd ) {
+		return lobby[roomNumber].idPlayer2;
+	}
+	if ( (lobby[roomNumber].idPlayer2) == sd ) {
+		return lobby[roomNumber].idPlayer1;
+	}
+	return sd;
+}
+void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	
 	//sendTo("Print room : ");
 	//sendTo("p1=%d p2=%d ",room->p1,room->p2);
 	//sendTo("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
 }
-void attaqueNormale(SOCKET sd,int roomNumber){
+void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
 	//appliquer dégats
-	giveRoomInfo(sd,roomNumber);
+	giveRoomInfo(sd,roomNumber,lobby);
 	return;
 }
-void attaqueRisquee(SOCKET sd,int roomNumber){
+void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
 	return;
 }
-void attaqueSuicide(SOCKET sd,int roomNumber){
+void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
 	return;
 }
 
-void joinRoom(SOCKET sd, int roomNumber){
+void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
 	//si player1 vide alors sd devient player1
 	//return 
 	//si player2 vide alors sd devient player2
@@ -293,24 +284,20 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 		if (strcmp(instructions[0],"R")==0){
 				roomNumber=atoi(instructions[1]);
 				if ( strcmp(instructions[2],"normale") == 0 ){
-					attaqueNormale(sd,roomNumber);
+					attaqueNormale(sd,roomNumber,lobby);
 				}else if ( strcmp(instructions[2],"risquée") == 0 ){
-					attaqueRisquee(sd,roomNumber);
+					attaqueRisquee(sd,roomNumber,lobby);
 				}else if ( strcmp(instructions[2],"suicide") == 0 ){
-					attaqueSuicide(sd,roomNumber);
+					attaqueSuicide(sd,roomNumber,lobby);
 				}
 				
 		}else if (strcmp(instructions[0],"/R")==0){
 				roomNumber=atoi(instructions[1]);
-				if(lobby[roomNumber].idPlayer1==sd){
-					sendTo(lobby[roomNumber].idPlayer2,originalMessage);
-				}else if(lobby[roomNumber].idPlayer2==sd){
-					sendTo(lobby[roomNumber].idPlayer1,originalMessage);
-				}
-					
+				sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
+									
 		}else if (strcmp(instructions[0],"join")==0){
 				roomNumber=atoi(instructions[1]);
-				joinRoom(sd,roomNumber);
+				joinRoom(sd,roomNumber,lobby);
 		}
 		
 		
