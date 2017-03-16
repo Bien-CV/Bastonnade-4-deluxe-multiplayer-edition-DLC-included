@@ -435,7 +435,7 @@ int mainServer(int argc , char *argv[])
     addrlen = sizeof(address);
     
     
-    puts("En attente de connections ...");
+    puts("En attente de connexions ...");
      
     while(TRUE) 
     {
@@ -480,7 +480,7 @@ int mainServer(int argc , char *argv[])
             }
           
             //inform user of socket number - used in send and receive commands
-            printf("Nouvelle connection, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+            printf("Nouvelle connexion, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
         
             //Envoi du message de bienvenue
             if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
@@ -504,14 +504,14 @@ int mainServer(int argc , char *argv[])
             }
         }
           
-        //Si ce n'est pas une nouvelle connection sur le socket principal alors c'est une opération d'entrée ou sortie sur un socket quelqconque
+        //Si ce n'est pas une nouvelle connexion sur le socket principal alors c'est une opération d'entrée ou sortie sur un socket quelqconque
         for (i = 0; i < max_clients; i++) 
         {
             sd = client_socket[i];
               
             if (FD_ISSET( sd , &readfds)) 
             {
-                //Vérifie si c'était une fermeture de connection et lit le message entrant
+                //Vérifie si c'était une fermeture de connexion et lit le message entrant
                 if ((valread = read( sd , buffer, READ_BUFFER_SIZE )) == 0)
                 {
                     //Quelqu'un s'est déconnecté, affiche les détails
