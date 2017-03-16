@@ -68,6 +68,7 @@ typedef struct room{
 	int p2;//Points de vie du joueur 2
 	SOCKET idPlayer1;//Socket descriptor du joueur 1
 	SOCKET idPlayer2;//Socket descriptor du joueur 2
+	SOCKET nextPlayerID;
 }room_t;
 
 typedef room_t* lobby;
@@ -77,6 +78,8 @@ void initRoom(room_t* room, int maxHP){
 	room->p2=maxHP;
 	room->idPlayer1=0;
 	room->idPlayer2=0;
+	room->nextPlayerID=-1;
+	
 }
 
 void printRoom(room_t* room){
@@ -100,6 +103,43 @@ void clearRoom(room_t* room){
 	room->idPlayer1=0;
 	room->idPlayer2=0;
 }
+
+//On itère sur toutes rooms quand un joueur part afin de vérifier dans quelles rooms il était présent.
+//Sous-optimal, devrait être fait régulièrement mais pas à très haute-fréquence
+void playerLeft(SOCKET id, lobby lobby){
+	int i;
+	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
+		if ( lobby[i]->idPlayer1 == id ){
+			if ( lobby[i]->idPlayer2 == 0 ){
+				puts("Room %d cleared.",i);
+				clearRoom(lobby[i]);
+				return;
+			}else{
+				puts("Player %d surrendered over player %d.",lobby[i]->idPlayer1, lobby[i]->idPlayer2);
+				victoryMessage(lobby[i]->idPlayer2);
+				puts("Room %d cleared.",i);
+				clearRoom(lobby[i]);
+				return;
+			}
+		}else if ( lobby[i]->idPlayer2 == id ){
+			if ( lobby[i]->idPlayer1 == 0 ){
+				puts("Room %d cleared.",i);
+				clearRoom(lobby[i]);
+				return;
+			}else{
+				puts("Player %d surrendered over player %d.",lobby[i]->idPlayer2, lobby[i]->idPlayer1);
+				victoryMessage(lobby[i]->idPlayer1);
+				puts("Room %d cleared.",i);
+				clearRoom(lobby[i]);
+				return;
+			}
+		}
+	}
+	
+	return;
+
+}
+
 
 void initLobby(lobby lobby,int maxHP){
 	int i;
@@ -466,7 +506,7 @@ int mainServer(int argc , char *argv[])
                     //Quelqu'un s'est déconnecté, affiche les détails
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
                     printf("Hote déconnecté , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                      
+                    playerLeft(sd,lobby);
                     //Ferme le socket et le marque comme étant libre ( 0 )
                     close( sd );
                     client_socket[i] = 0;
