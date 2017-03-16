@@ -23,6 +23,7 @@ typedef struct in_addr IN_ADDR;
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
+#define MAX_ROOM_INFO_BUFFER 300
 #define AFFICHAGE_EXCENTRIQUE 1
 #define DEFAULT_MESSAGE (char*)"Connexion au serveur Bastonnade réussie !\n"
 #define MAX_PENDING_CONNEXIONS 10
@@ -238,6 +239,8 @@ void leetspeaker(char* clientString){
 	}
 	return;
 }
+
+//Renvoie l'id de l'autre joueur de la room. Si sd n'est pas dans la room, renvoie son propre id.
 SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
 	if ( (lobby[roomNumber].idPlayer1) == sd ) {
 		return lobby[roomNumber].idPlayer2;
@@ -247,11 +250,12 @@ SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
 	}
 	return sd;
 }
+
 void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
-	
-	//sendTo("Print room : ");
-	//sendTo("p1=%d p2=%d ",room->p1,room->p2);
-	//sendTo("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
+	char buffer [MAX_ROOM_INFO_BUFFER];
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER, "Room %d : \nPlayer 1 id is %d, he has %d HP\nPlayer 2 id is %d, he has %d HP\n", roomNumber,lobby[roomNumber].idPlayer1,lobby[roomNumber].p1,lobby[roomNumber].idPlayer2,lobby[roomNumber].p2 );
+	sendTo(sd,buffer);
+	return;
 }
 void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
 	//appliquer dégats
@@ -276,9 +280,11 @@ void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
 void processClientString(SOCKET sd, char* s,lobby lobby){
 	char** instructions;
 	int roomNumber;
-	char* originalMessage;
+	char* originalMessage=(char*)malloc(strlen(s)+1);
+	char* processedMessage=(char*)malloc(strlen(s)+1);
+	strcpy(processedMessage,s);
 	strcpy(originalMessage,s);
-	instructions = str_split(s, ' ');
+	instructions = str_split(processedMessage, ' ');
 	if (instructions!=NULL)
     {
 		if (strcmp(instructions[0],"R")==0){
