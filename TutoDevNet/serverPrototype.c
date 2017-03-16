@@ -32,10 +32,13 @@ typedef struct sockaddr SOCKADDR;
 typedef struct in_addr IN_ADDR;
 
 
+//TODO Un système de logging de l'activité serveur
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#define AFFICHAGE_EXCENTRIQUE 1
 #define DEFAULT_MESSAGE (char*)"Connexion au serveur Bastonnade réussie !\n"
 #define MAX_PENDING_CONNEXIONS 10
 #define DEFAULT_PORT 5000
@@ -46,6 +49,8 @@ typedef struct in_addr IN_ADDR;
 #define BUFFER_SIZE 1024
 #define READ_BUFFER_SIZE 1024
 #define MAX_CONNEXIONS 1000
+#define MAX_NUMBER_OF_ROOMS 100
+#define MAX_WELCOME_LEN 128
 #define EXIT_ACTIVATED (false)
 #define TRUE   1
 #define FALSE  0
@@ -58,6 +63,64 @@ typedef struct connexion{
 	int port;
 }connexion_t;
 
+typedef struct room{
+	int p1; //Points de vie du joueur 1
+	int p2;//Points de vie du joueur 2
+	SOCKET idPlayer1;//Socket descriptor du joueur 1
+	SOCKET idPlayer2;//Socket descriptor du joueur 2
+}room_t;
+
+typedef room_t* lobby;
+
+void initRoom(room_t* room, int maxHP){
+	room->p1=maxHP;
+	room->p2=maxHP;
+	room->idPlayer1=0;
+	room->idPlayer2=0;
+}
+
+void printRoom(room_t* room){
+	printf("Print room : ");
+	printf("p1=%d p2=%d ",room->p1,room->p2);
+	printf("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
+}
+
+void printRoomNL(room_t* room){
+	printRoom(room);
+	printf("\n");
+}
+
+bool isRoomEmpty(room_t* room){
+	return ( (room->idPlayer1==0 ) && (room->idPlayer2==0) );
+}
+ 
+void clearRoom(room_t* room){
+	room->p1=0;
+	room->p2=0;
+	room->idPlayer1=0;
+	room->idPlayer2=0;
+}
+
+void initLobby(lobby lobby,int maxHP){
+	int i;
+	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
+		initRoom(&(lobby[i]),maxHP);
+	}
+}
+void printLobby(lobby lobby){
+	int i;
+	printf(" __________________________________________________________ \n");
+	printf("|~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ |\n");
+	printf("| Room number                 Room details                 |\n");
+	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
+		printf("|");
+		printf("%11d | ",i);
+		printRoom(&(lobby[i]));
+		printf("         |");
+		printf("\n");
+	}
+	printf("|__________________________________________________________|\n");
+}
 int mainClient(int argc, char **argv);
 int mainServer(int argc, char **argv);
 int getInt(void);
@@ -77,11 +140,6 @@ int getInt(void){
 	}
 }
 void processClientString(char* clientString){
-	//EMPTY
-	return;
-}
-                    
-void clearClientString(char* clientString){
 	int len=strlen(clientString);
 	for (int i=0;i<len;i++){
 		if ( clientString[i] == 'e' ) clientString[i]='3';
@@ -96,33 +154,136 @@ void clearClientString(char* clientString){
 		if ( clientString[i] == 'A' ) clientString[i]='4';
 		
 	}
-	
 	return;
 }
-                    
+void print_image(FILE *fptr){
+		char read_string[MAX_WELCOME_LEN];
+	 
+		while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+			printf("%s",read_string);
+}
+
+void printMenu(int choice){
+	if ( choice == 0 ){
+		printf("-Menu-\n");
+		printf("1 - Jouer\n");
+		printf("2 - Serveur\n");
+		printf("0 - Quitter\n");
+	}else if ( choice == 1 ){
+		char *filename = (char *)"menu1.txt";
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+	 
+		print_image(fptr);
+	 
+		fclose(fptr);
+	}else if ( choice == 2 ){
+		char *filename = (char *)"menu2.txt";
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+	 
+		print_image(fptr);
+	 
+		fclose(fptr);
+	
+	}
+	return;
+ }
+ 
+ void printEasterEgg(){
+	
+		char *filename = (char *)"easteregg";
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+	 
+		print_image(fptr);
+	 
+		fclose(fptr);
+	
+	
+	return;
+ }
+ 
+          
 void menu(int argc, char **argv){
-	printf("-Menu-\n");
-	printf("0 - Quitter\n");
-	printf("1 - Serveur\n");
-	printf("2 - Client\n");
+	printMenu(AFFICHAGE_EXCENTRIQUE);
 	int intInput=getInt();
-	if ( intInput == 1 ){
+	if ( intInput == 2 ){
 		//call server
         if DEBUG puts("Launching server...\n");
 		mainServer(argc, argv);
-	}else if( intInput == 2 ){
+	}else if( intInput == 1 ){
 		//call client
 		mainClient(argc, argv);
 	}else if( intInput == 0 ){
 		//call exit
+		return;
+	}else if( intInput == 3 ){
+		//call easter egg
+		printEasterEgg();
 		return;
 	}else{
 		printf("Erreur de saisie menu.");
 	}
 }
  
+ 
+ void printWelcomeMessage(int choice){
+	if ( choice == 0 ){
+		printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
+	}else if ( choice == 1 ){
+		char *filename = (char *)"welcome.txt";
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+	 
+		print_image(fptr);
+	 
+		fclose(fptr);
+	}else if ( choice == 2 ){
+		char *filename = (char *)"welcome2.txt";
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+	 
+		print_image(fptr);
+	 
+		fclose(fptr);
+	
+	}
+	return;
+ }
+ 
+  
+ 
+ 
 int main(int argc, char **argv){
-	printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
+	
+	printWelcomeMessage(AFFICHAGE_EXCENTRIQUE);
+	
 	//printf("Argc = %d , argv1 = %s",argc,argv[1]);
 	//printf("strcmp argv1 client:%d\n",strcmp(argv[1],"client"));
 	
@@ -149,7 +310,8 @@ SOCKET newSocket(){
 }
 
 int mainClient(int argc, char **argv) {
-	puts("Usage : >telnet localhost 5000 \n Ensuite, écrivez leetspeak et appuyez  entrée.\n Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
+	puts("\n\n\n\n\n\n\n\n\n\n");
+	puts("\nPour jouer, utilisez la commande suivante :\n\n telnet localhost 5000 \n\n localhost doit être l'adresse d'un serveur Bastonnade. \n\n\n Ensuite, écrivez leetspeak et appuyez  entrée.\n\n Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
 	
 	
 	return EXIT_SUCCESS;
@@ -157,7 +319,10 @@ int mainClient(int argc, char **argv) {
 
 
 int mainServer(int argc , char *argv[])
-{
+{    
+    room_t lobby[MAX_NUMBER_OF_ROOMS];
+    initLobby(lobby,0);
+    printLobby(lobby);
     
     int sd; //socket descriptor
     int max_sd; //Plus grand socket descriptor
@@ -315,9 +480,7 @@ int mainServer(int argc , char *argv[])
                     //buffer contient maintenant la chaîne envoyée par le client
                     //On peut donc l'utiliser.
                     printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
-                    processClientString(buffer);
-                    clearClientString(buffer);
-                    
+                    processClientString(buffer);                    
                     send(sd , buffer , strlen(buffer) , 0 );
                 }
             }
