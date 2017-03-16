@@ -35,6 +35,7 @@ typedef struct in_addr IN_ADDR;
 #define BUFFER_SIZE 1024
 #define READ_BUFFER_SIZE 1024
 #define MAX_CONNEXIONS 1000
+#define MAX_HP 20
 #define MAX_NUMBER_OF_ROOMS 100
 #define MAX_WELCOME_LEN 128
 #define EXIT_ACTIVATED (false)
@@ -257,7 +258,14 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	sendTo(sd,buffer);
 	return;
 }
-
+	void notifyPlayersOfGameStart(int roomNumber,lobby lobby){
+	sendTo(lobby[roomNumber].idPlayer1,"Game is starting !\n");
+	sendTo(lobby[roomNumber].idPlayer2,"Game is starting !\n");
+}
+	void notifyCurrentPlayer(int roomNumber,lobby lobby){
+	sendTo(lobby[roomNumber].currentPlayer,"It's your turn to play.\n");
+}
+	
 /*
  * Fonctions des différentes attaques
  */
@@ -304,8 +312,26 @@ void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
 	giveRoomInfo(sd,roomNumber,lobby);
 	return;
 }
-
+void startGame( int roomNumber,lobby lobby){
+	lobby[roomNumber].currentPlayer=lobby[roomNumber].idPlayer1;
+	notifyPlayersOfGameStart(roomNumber, lobby);
+	notifyCurrentPlayer(roomNumber, lobby);	
+}
 void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
+	
+	if(lobby[roomNumber].idPlayer1==0){
+		lobby[roomNumber].idPlayer1=sd;
+		sendTo(sd,"Vous avez rejoint la room en tant que joueur 1\n");
+		return;
+	}
+	
+	if(lobby[roomNumber].idPlayer2==0){
+		lobby[roomNumber].idPlayer2=sd;
+		sendTo(sd,"Vous avez rejoint la room en tant que joueur 2\n");
+		startGame( roomNumber,lobby );
+		return;
+	}
+	sendTo(sd,"La room n'est pas libre.\n");
 	//si player1 vide alors sd devient player1
 	//return 
 	//si player2 vide alors sd devient player2
@@ -527,7 +553,7 @@ int mainClient(int argc, char **argv) {
 int mainServer(int argc , char *argv[])
 {    
     room_t lobby[MAX_NUMBER_OF_ROOMS];
-    initLobby(lobby,0);
+    initLobby(lobby,20);
     printLobby(lobby);
     
     int sd; //socket descriptor
