@@ -257,6 +257,32 @@ void leetspeaker(char* clientString){
 	return;
 }
 
+void giveRoomInfo(SOCKET sd,int roomNumber){
+	
+	//sendTo("Print room : ");
+	//sendTo("p1=%d p2=%d ",room->p1,room->p2);
+	//sendTo("id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
+}
+void attaqueNormale(SOCKET sd,int roomNumber){
+	//appliquer dégats
+	giveRoomInfo(sd,roomNumber);
+	return;
+}
+void attaqueRisquee(SOCKET sd,int roomNumber){
+	return;
+}
+void attaqueSuicide(SOCKET sd,int roomNumber){
+	return;
+}
+
+void joinRoom(SOCKET sd, int roomNumber){
+	//si player1 vide alors sd devient player1
+	//return 
+	//si player2 vide alors sd devient player2
+	
+	
+	return;
+}
 void processClientString(SOCKET sd, char* s,lobby lobby){
 	char** instructions;
 	int roomNumber;
@@ -275,7 +301,7 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 					attaqueSuicide(sd,roomNumber);
 				}
 				
-		}else if (strcmp(instructions[0],"\R")==0){
+		}else if (strcmp(instructions[0],"/R")==0){
 				roomNumber=atoi(instructions[1]);
 				if(lobby[roomNumber].idPlayer1==sd){
 					sendTo(lobby[roomNumber].idPlayer2,originalMessage);
@@ -294,9 +320,9 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
         for (i = 0; instructions[i]; i++)
         {
             
-            free(tokens[i]);
+            free(instructions[i]);
         }
-    free(tokens);
+    free(instructions);
     }
 	return;
 }
@@ -632,7 +658,7 @@ int mainServer(int argc , char *argv[])
                     //buffer contient maintenant la chaîne envoyée par le client
                     //On peut donc l'utiliser.
                     printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
-                    processClientString(sd,buffer);                    
+                    processClientString(sd,buffer,lobby);                    
                     send(sd , buffer , strlen(buffer) , 0 );
                 }
             }
