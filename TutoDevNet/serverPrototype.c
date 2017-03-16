@@ -79,7 +79,7 @@ void initRoom(room_t* room, int maxHP){
 	room->p2=maxHP;
 	room->idPlayer1=0;
 	room->idPlayer2=0;
-	room->nextPlayerID=-1;
+	room->nextPlayerID=0;
 	
 }
 
@@ -105,33 +105,44 @@ void clearRoom(room_t* room){
 	room->idPlayer2=0;
 }
 
+
+
+void sendTo(SOCKET client,const char* msg){
+	send(client , msg , strlen(msg) , 0 );
+}
+
+void victoryMessage(SOCKET winner){
+	sendTo(winner , "Vous avez gagné!");
+}
+
+
 //On itère sur toutes rooms quand un joueur part afin de vérifier dans quelles rooms il était présent.
 //Sous-optimal, devrait être fait régulièrement mais pas à très haute-fréquence
 void playerLeft(SOCKET id, lobby lobby){
 	int i;
 	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
-		if ( lobby[i]->idPlayer1 == id ){
-			if ( lobby[i]->idPlayer2 == 0 ){
-				puts("Room %d cleared.",i);
-				clearRoom(lobby[i]);
+		if ( lobby[i].idPlayer1 == id ){
+			if ( lobby[i].idPlayer2 == 0 ){
+				printf("Room %d cleared.",i);
+				clearRoom(&lobby[i]);
 				return;
 			}else{
-				puts("Player %d surrendered over player %d.",lobby[i]->idPlayer1, lobby[i]->idPlayer2);
-				victoryMessage(lobby[i]->idPlayer2);
-				puts("Room %d cleared.",i);
-				clearRoom(lobby[i]);
+				printf("Player %d surrendered over player %d.",lobby[i].idPlayer1, lobby[i].idPlayer2);
+				victoryMessage(lobby[i].idPlayer2);
+				printf("Room %d cleared.",i);
+				clearRoom(&lobby[i]);
 				return;
 			}
-		}else if ( lobby[i]->idPlayer2 == id ){
-			if ( lobby[i]->idPlayer1 == 0 ){
-				puts("Room %d cleared.",i);
-				clearRoom(lobby[i]);
+		}else if ( lobby[i].idPlayer2 == id ){
+			if ( lobby[i].idPlayer1 == 0 ){
+				printf("Room %d cleared.",i);
+				clearRoom(&lobby[i]);
 				return;
 			}else{
-				puts("Player %d surrendered over player %d.",lobby[i]->idPlayer2, lobby[i]->idPlayer1);
-				victoryMessage(lobby[i]->idPlayer1);
-				puts("Room %d cleared.",i);
-				clearRoom(lobby[i]);
+				printf("Player %d surrendered over player %d.",lobby[i].idPlayer2, lobby[i].idPlayer1);
+				victoryMessage(lobby[i].idPlayer1);
+				printf("Room %d cleared.",i);
+				clearRoom(&lobby[i]);
 				return;
 			}
 		}
