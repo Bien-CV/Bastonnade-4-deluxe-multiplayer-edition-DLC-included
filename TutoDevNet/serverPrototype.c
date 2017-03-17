@@ -32,6 +32,7 @@ typedef struct in_addr IN_ADDR;
 #define TAILLE_MAX_NOM 256
 #define ERROR_INT -1
 #define DEBUG (true)
+#define BUG_HUNTING (false)
 #define BUFFER_SIZE 1024
 #define READ_BUFFER_SIZE 1024
 #define MAX_CONNEXIONS 1000
@@ -367,6 +368,15 @@ void startGame( int roomNumber,lobby lobby){
 }
 void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
 	
+	if(lobby[roomNumber].idPlayer1==sd){
+		sendTo(sd,"Vous êtes déjà dans la room.\n");
+		return;
+	}
+	if(lobby[roomNumber].idPlayer2==sd){
+		sendTo(sd,"Vous êtes déjà dans la room.\n");
+		return;
+	}
+	
 	if(lobby[roomNumber].idPlayer1==0){
 		lobby[roomNumber].idPlayer1=sd;
 		sendTo(sd,"Vous avez rejoint la room en tant que joueur 1\n");
@@ -383,46 +393,75 @@ void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
 	
 	return;
 }
+
+void showCharsOfString(char* s){
+	int i=0;
+	if (s == NULL) return;
+	size_t sz=strlen(s);
+	
+	for(i=0;i<sz;i++){
+		printf("Char %d : %c\n",i,s[i]);
+	}
+	
+	
+	return;
+}
 void processClientString(SOCKET sd, char* s,lobby lobby){
 	char** instructions;
 	int roomNumber;
-	char* originalMessage=(char*)malloc(strlen(s)+1);
-	char* processedMessage=(char*)malloc(strlen(s)+1);
+	s[strlen(s)-1-1]=' ';
+	if BUG_HUNTING showCharsOfString(s);
+	char* originalMessage=(char*)calloc(strlen(s)+1,sizeof(char));
+	char* processedMessage=(char*)calloc(strlen(s)+1,sizeof(char));
 	strcpy(processedMessage,s);
 	strcpy(originalMessage,s);
 	instructions = str_split(processedMessage, ' ');
+	
 	if (instructions!=NULL)
     {
+		if ( instructions[0] == NULL ) {
+			printf("INSTRUCTION == NULL\n");
+			return;
+		}
 		if (strcmp(instructions[0],"R")==0){
-				roomNumber=atoi(instructions[1]);
+			
+			
+			roomNumber=atoi(instructions[1]);
 				if ( strcmp(instructions[2],"normale") == 0 ){
+					
 					attaqueNormale(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"risquée") == 0 ){
-					attaqueRisquee(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
+					attaqueRisquee(sd,roomNumber,lobby);
+					
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"suicide") == 0 ){
-					attaqueSuicide(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
+					attaqueSuicide(sd,roomNumber,lobby);
+					
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}
 				
 		}else if (strcmp(instructions[0],"/R")==0){
+			printf("/R reconnu\n");
 				roomNumber=atoi(instructions[1]);
 				sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
 				if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
 									
 		}else if (strcmp(instructions[0],"join")==0){
+				printf("join reconnu\n");
 				roomNumber=atoi(instructions[1]);
 				joinRoom(sd,roomNumber,lobby);
-				if DEBUG printf("Joueur %d entre dans la room %d",sd,roomNumber);
+				if DEBUG printf("Joueur %d demande à entrer dans la room %d\n",sd,roomNumber);
 				if DEBUG printRoomNL(&(lobby[roomNumber]));
 		}
 		
 		
 		
+        free(originalMessage);
+        free(processedMessage);
         int i;
         for (i = 0; instructions[i]; i++)
         {
@@ -430,7 +469,9 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
             free(instructions[i]);
         }
     free(instructions);
-    }
+    }else{
+		if DEBUG printf("INSTRUCTIONS NULLES\n");
+	}
 	return;
 }
 
