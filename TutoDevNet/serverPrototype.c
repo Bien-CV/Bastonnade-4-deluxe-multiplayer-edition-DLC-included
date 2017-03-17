@@ -71,7 +71,7 @@ void victoryMessage(SOCKET winner);
 void defeatMessage(SOCKET winner);
 void drawMessage(SOCKET winner);
 bool gameEnded(int roomNumber, lobby lobby);
-char** str_split(char* a_str, const char a_delim)
+char** str_split(char* a_str, const char a_delim);
 void playerLeft(SOCKET id, lobby lobby);
 void initLobby(lobby lobby,int maxHP);
 void printLobby(lobby lobby);
@@ -84,6 +84,24 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby);
 void notifyPlayersOfGameStart(int roomNumber,lobby lobby);
 void notifyCurrentPlayer(int roomNumber,lobby lobby);
 void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby);
+void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby);
+void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby);
+void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby);
+void startGame( int roomNumber,lobby lobby);
+void joinRoom(SOCKET sd, int roomNumber,lobby lobby);
+void showCharsOfString(char* s);
+void processClientString(SOCKET sd, char* s,lobby lobby);
+void print_image(FILE *fptr);
+void printSD_image(SOCKET sd, FILE *fptr);
+void send_image(SOCKET sd, char * filename);
+void printMenu(int choice);
+void printEasterEgg();
+void menu(int argc, char **argv);
+void printWelcomeMessage(int choice);
+int main(int argc, char **argv);
+SOCKET newSocket();
+int mainClient(int argc, char **argv) ;
+int mainServer(int argc , char *argv[]);
 void showAliases(char ** list );
 void showAddrList(char ** list );
 void showHostent(hostent* h);
@@ -292,8 +310,9 @@ void leetspeaker(char* clientString){
 	return;
 }
 
-//Renvoie l'id de l'autre joueur de la room. Si sd n'est pas dans la room, renvoie son propre id.
 SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
+
+	//Renvoie l'id de l'autre joueur de la room. Si sd n'est pas dans la room, renvoie son propre id.
 	if ( (lobby[roomNumber].idPlayer1) == sd ) {
 		return lobby[roomNumber].idPlayer2;
 	}
@@ -352,9 +371,8 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
 	giveRoomInfo(sd,roomNumber,lobby);
 	giveRoomInfo(getOtherPlayer(sd,roomNumber,lobby),roomNumber,lobby);
 }
-/*
- * Fonctions des différentes attaques
- */
+
+
  void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
  	int r;
  	r = rand()%6;
