@@ -216,9 +216,9 @@ void initLobby(lobby lobby,int maxHP){
 }
 void printLobby(lobby lobby){
 	int i;
-	printf(" __________________________________________________________ \n");
-	printf("|~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ |\n");
-	printf("| Room number                 Room details                 |\n");
+	printf(" ____________________________________________________________ \n");
+	printf("| ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  |\n");
+	printf("| Room number                 Room details                   |\n");
 	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
 		printf("|");
 		printf("%11d | ",i);
@@ -226,7 +226,7 @@ void printLobby(lobby lobby){
 		printf("         |");
 		printf("\n");
 	}
-	printf("|__________________________________________________________|\n");
+	printf("|____________________________________________________________|\n");
 }
 int mainClient(int argc, char **argv);
 int mainServer(int argc, char **argv);
@@ -274,19 +274,32 @@ SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby){
 	}
 	return sd;
 }
+
+void sendRoom(SOCKET sd, room_t* room){
+	char buffer [MAX_ROOM_INFO_BUFFER];
+	
+	sendTo(sd,"Print room : ");
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER, "p1=%d p2=%d ",room->p1,room->p2);
+	sendTo(sd,buffer);
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER, "id1=%d id2=%d ",room->idPlayer1,room->idPlayer2);
+	sendTo(sd,buffer);
+}
+
 void sendLobby(SOCKET sd , lobby lobby){
 	int i;
-	sendTo(sd," __________________________________________________________ \n");
-	printf("|~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ |\n");
-	printf("| Room number                 Room details                 |\n");
+	char buffer [MAX_ROOM_INFO_BUFFER];
+	sendTo(sd," ____________________________________________________________ \n");
+	sendTo(sd,"| ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ LOBBY ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  |\n");
+	sendTo(sd,"| Room number                 Room details                   |\n");
 	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
-		printf("|");
-		printf("%11d | ",i);
-		printRoom(&(lobby[i]));
-		printf("         |");
-		printf("\n");
+		sendTo(sd,"|");
+		snprintf ( buffer, MAX_ROOM_INFO_BUFFER,"%11d | ",i);
+		sendTo(sd,buffer);
+		sendRoom(sd,&(lobby[i]));
+		sendTo(sd,"         |");
+		sendTo(sd,"\n");
 	}
-	printf("|__________________________________________________________|\n");
+	sendTo(sd,"|____________________________________________________________|\n");
 }
 
 void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
@@ -310,6 +323,7 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
 	}
 	notifyCurrentPlayer(roomNumber,lobby);
 	giveRoomInfo(sd,roomNumber,lobby);
+	giveRoomInfo(getOtherPlayer(sd,roomNumber,lobby),roomNumber,lobby);
 }
 /*
  * Fonctions des différentes attaques
@@ -445,17 +459,18 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 				}
 				
 		}else if (strcmp(instructions[0],"/R")==0){
-			printf("/R reconnu\n");
 				roomNumber=atoi(instructions[1]);
 				sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
 				if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
 									
 		}else if (strcmp(instructions[0],"join")==0){
-				printf("join reconnu\n");
 				roomNumber=atoi(instructions[1]);
 				joinRoom(sd,roomNumber,lobby);
 				if DEBUG printf("Joueur %d demande à entrer dans la room %d\n",sd,roomNumber);
 				if DEBUG printRoomNL(&(lobby[roomNumber]));
+		}else if (strcmp(instructions[0],"lobby")==0){
+				sendLobby(sd,lobby);
+				if DEBUG printf("Joueur %d demande à afficher le lobby\n",sd);
 		}
 		
 		
