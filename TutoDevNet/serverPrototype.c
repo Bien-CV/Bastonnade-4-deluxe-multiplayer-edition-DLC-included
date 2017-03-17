@@ -15,9 +15,6 @@ typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 typedef struct in_addr IN_ADDR;
 
-
-//TODO Un système de logging de l'activité serveur
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -247,6 +244,7 @@ void showAddrList(char ** list );
 void showHostent(hostent* h);
 void showAliases(char ** list );
 SOCKET newSocket();
+void send_image(SOCKET sd, char * filename);
 
 int getInt(void){
 	int tmpInt;
@@ -434,7 +432,8 @@ void showCharsOfString(char* s){
 void processClientString(SOCKET sd, char* s,lobby lobby){
 	char** instructions;
 	int roomNumber;
-	s[strlen(s)-1-1]=' ';
+	//permet de ne pas prendre en compte les caractères de terminaison de saisie sous telnet
+	s[strlen(s)-2]=' ';
 	if BUG_HUNTING showCharsOfString(s);
 	char* originalMessage=(char*)calloc(strlen(s)+1,sizeof(char));
 	char* processedMessage=(char*)calloc(strlen(s)+1,sizeof(char));
@@ -482,6 +481,9 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 		}else if (strcmp(instructions[0],"lobby")==0){
 				sendLobby(sd,lobby);
 				if DEBUG printf("Joueur %d demande à afficher le lobby\n",sd);
+		}else if (strcmp(instructions[0],"pika?")==0){
+				send_image(sd,(char*)"easteregg");
+				if DEBUG printf("Pika %d piiii pika pikaCHUUUU!\n",sd);
 		}
 		
 		
@@ -507,6 +509,31 @@ void print_image(FILE *fptr){
 		while(fgets(read_string,sizeof(read_string),fptr) != NULL)
 			printf("%s",read_string);
 }
+
+
+void printSD_image(SOCKET sd, FILE *fptr){
+		
+		
+		char read_string[MAX_WELCOME_LEN];
+	 
+		while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+			sendTo(sd,read_string);
+}
+
+void send_image(SOCKET sd, char * filename){
+	
+		FILE *fptr = NULL;
+	 
+		if((fptr = fopen(filename,"r")) == NULL)
+		{
+			fprintf(stderr,"error opening %s\n",filename);
+			return;
+		}
+		printSD_image(sd, fptr);
+	 
+		fclose(fptr);
+}
+
 
 void printMenu(int choice){
 	if ( choice == 0 ){
