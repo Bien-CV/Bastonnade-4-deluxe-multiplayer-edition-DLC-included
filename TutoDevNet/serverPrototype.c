@@ -37,7 +37,7 @@ typedef struct in_addr IN_ADDR;
 #define READ_BUFFER_SIZE 1024
 #define MAX_CONNEXIONS 1000
 #define MAX_HP 20
-#define MAX_NUMBER_OF_ROOMS 100
+#define MAX_NUMBER_OF_ROOMS 10
 #define MAX_WELCOME_LEN 128
 #define EXIT_ACTIVATED (false)
 #define TRUE   1
@@ -726,10 +726,17 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
  	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
  	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
  	puts("Pour quitter, saisissez : quit\n");
-
+	
+	char host_address[MAX_COMMAND_BUFFER];
+	char host_port[MAX_COMMAND_BUFFER];
+	puts("Saisissez l'addresse\n");
+	scanf("%s",host_address);
+	puts("Saisissez le port\n");
+	scanf("%s",host_port);
+	
  	char buffer [MAX_COMMAND_BUFFER];
  	snprintf ( buffer, MAX_COMMAND_BUFFER,
- 		"%s %s %s", "telnet -E",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
+ 		"%s %s %s", "./michel -E",host_address,host_port);
 
  	system(buffer);
 
