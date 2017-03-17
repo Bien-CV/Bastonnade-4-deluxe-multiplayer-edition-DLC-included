@@ -84,6 +84,7 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby);
 void notifyPlayersOfGameStart(int roomNumber,lobby lobby);
 void notifyCurrentPlayer(int roomNumber,lobby lobby);
 void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby);
+void sendDamages(SOCKET sd,int r);
 void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby);
 void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby);
 void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby);
@@ -372,7 +373,14 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
 	giveRoomInfo(getOtherPlayer(sd,roomNumber,lobby),roomNumber,lobby);
 }
 
-
+void sendDamages(SOCKET sd,int r){
+	char buffer[MAX_ROOM_INFO_BUFFER];
+	
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER,"You inflicted %d damages.\n",r);
+	
+	sendTo(sd,buffer);
+	return;
+}
  void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
  	int r;
  	r = rand()%6;
