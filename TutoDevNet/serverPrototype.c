@@ -385,13 +385,14 @@ void sendDamages(SOCKET sd,int r){
  	int r;
  	r = rand()%6;
  	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+		
  		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
  	} else {
  		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-
+	sendDamages(sd,r);
  	endOfAttackingPhase(sd,roomNumber,lobby);
  	return;
  }
@@ -406,7 +407,7 @@ void sendDamages(SOCKET sd,int r){
  		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-
+	sendDamages(sd,r);
  	endOfAttackingPhase(sd,roomNumber,lobby);
 
  	return;
@@ -424,7 +425,7 @@ void sendDamages(SOCKET sd,int r){
  		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-
+	sendDamages(sd,r);
  	endOfAttackingPhase(sd,roomNumber,lobby);
  	return;
  }
