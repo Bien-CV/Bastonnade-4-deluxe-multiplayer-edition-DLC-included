@@ -480,13 +480,20 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
  	if (instructions!=NULL)
  	{
  		if ( instructions[0] == NULL ) {
- 			printf("INSTRUCTION == NULL\n");
+ 			printf("INSTRUCTION 0 == NULL\n");
  			return;
  		}
  		if (strcmp(instructions[0],"R")==0){
 
-
+			if ( instructions[1] == NULL ) {
+ 			printf("INSTRUCTION 1 == NULL\n");
+ 			return;
+ 		}
  			roomNumber=atoi(instructions[1]);
+ 			if ( instructions[2] == NULL ) {
+ 			printf("INSTRUCTION 2 == NULL\n");
+ 			return;
+ 		}
  			if ( strcmp(instructions[2],"normale") == 0 ){
  				attaqueNormale(sd,roomNumber,lobby);
  				if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
@@ -507,6 +514,10 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
  			if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
 
  		}else if (strcmp(instructions[0],"join")==0){
+			if ( instructions[1] == NULL ) {
+ 			printf("INSTRUCTION 1 == NULL\n");
+ 			return;
+			}
  			roomNumber=atoi(instructions[1]);
  			joinRoom(sd,roomNumber,lobby);
  			if DEBUG printf("Joueur %d demande à entrer dans la room %d\n",sd,roomNumber);
@@ -747,7 +758,7 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
  int mainServer(int argc , char *argv[])
  {    
  	room_t lobby[MAX_NUMBER_OF_ROOMS];
- 	initLobby(lobby,20);
+ 	initLobby(lobby,MAX_HP);
  	printLobby(lobby);
 
     int sd; //socket descriptor
