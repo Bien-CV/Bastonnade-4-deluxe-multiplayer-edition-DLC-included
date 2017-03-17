@@ -697,7 +697,7 @@ int mainClient(int argc, char **argv) {
 	
 	char buffer [MAX_COMMAND_BUFFER];
 	snprintf ( buffer, MAX_COMMAND_BUFFER,
-		"%s %s %s", "telnet",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
+		"%s %s %s", "telnet -E",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
 	
 	system(buffer);
 	
