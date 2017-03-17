@@ -105,16 +105,27 @@ void victoryMessage(SOCKET winner){
 void defeatMessage(SOCKET winner){
 	sendTo(winner , "Vous avez perdu!");
 }
+
+void drawMessage(SOCKET winner){
+	sendTo(winner , "Vous êtes tous les 2 morts ! Egalité");
+}
+
 bool gameEnded(int roomNumber, lobby lobby){
-	if(lobby[roomNumber].p1<=0){
+	if(lobby[roomNumber].p1<=0 && lobby[roomNumber].p2 > 0){
 		victoryMessage(lobby[roomNumber].idPlayer2);
 		defeatMessage(lobby[roomNumber].idPlayer1);
 		clearRoom(&(lobby[roomNumber]));
 		return true;
 	}
-	if(lobby[roomNumber].p2<=0){
+	if(lobby[roomNumber].p2<=0 && lobby[roomNumber].p1 > 0){
 		victoryMessage(lobby[roomNumber].idPlayer1);
 		defeatMessage(lobby[roomNumber].idPlayer2);
+		clearRoom(&(lobby[roomNumber]));
+		return true;
+	}
+	if(lobby[roomNumber].p1<=0 && lobby[roomNumber].p2<=0){
+		drawMessage(lobby[roomNumber].idPlayer1);
+		drawMessage(lobby[roomNumber].idPlayer2);
 		clearRoom(&(lobby[roomNumber]));
 		return true;
 	}
