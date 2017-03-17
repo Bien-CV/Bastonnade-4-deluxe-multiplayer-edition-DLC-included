@@ -21,6 +21,9 @@ typedef struct in_addr IN_ADDR;
 #include <errno.h>
 #include <assert.h>
 #define MAX_ROOM_INFO_BUFFER 300
+#define MAX_COMMAND_BUFFER 100
+#define DEFAULT_HOST_ADDRESS "localhost"
+#define DEFAULT_HOST_PORT "5000"
 #define AFFICHAGE_EXCENTRIQUE 1
 #define DEFAULT_MESSAGE (char*)"Connexion au serveur Bastonnade réussie !\n"
 #define MAX_PENDING_CONNEXIONS 10
@@ -683,15 +686,21 @@ SOCKET newSocket(){
 
 int mainClient(int argc, char **argv) {
 	puts("\n\n\n\n\n\n\n\n\n\n");
-	puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
+	//puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
 	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
 	puts("Pour rejoindre la room 1234 : join 1234\n ");
 	puts("Pour executer une attaque normale dans la room 1234 : R 1234 normale\n ");
 	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
 	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
 	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
-	puts("Pour quitter telnet, saisissez ctrl + alt-gr + ] à vide, telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
+	puts("Pour quitter, saisissez ctrl + alt-gr + ] à vide");
+	puts(" telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
 	
+	char buffer [MAX_COMMAND_BUFFER];
+	snprintf ( buffer, MAX_COMMAND_BUFFER,
+		"%s %s %s", "telnet",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
+	
+	system(buffer);
 	
 	return EXIT_SUCCESS;
 }
