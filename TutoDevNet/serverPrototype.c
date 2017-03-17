@@ -381,33 +381,63 @@ void sendDamages(SOCKET sd,int r){
 	sendTo(sd,buffer);
 	return;
 }
+
+void sendSelfDamages(SOCKET sd,int r){
+	char buffer[MAX_ROOM_INFO_BUFFER];
+	
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER,"You inflicted %d damages to yourself.\n",r);
+	
+	sendTo(sd,buffer);
+	return;
+}
+
+void sendDamagesSuffered(SOCKET sd,int r){
+	char buffer[MAX_ROOM_INFO_BUFFER];
+	
+	snprintf ( buffer, MAX_ROOM_INFO_BUFFER,"You suffered %d damages.\n",r);
+	
+	sendTo(sd,buffer);
+	return;
+}
+
  void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
- 	int r;
- 	r = rand()%6;
+ 	
+ 	int damages = rand()%6;
+ 	int selfDamages = 0;
  	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
 		
- 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - damages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
  	} else {
- 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - damages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-	sendDamages(sd,r);
+	sendDamagesSuffered(lobby[roomNumber].currentPlayer,damages);
+	sendDamages(sd,damages);
+	if ( selfDamages != 0 ) sendSelfDamages(sd,selfDamages);
  	endOfAttackingPhase(sd,roomNumber,lobby);
  	return;
  }
 
  void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
  	int r;
- 	r = rand()%11;
+ 	
+ 	r = rand();
+ 	int damages=r%11;
+ 	int selfDamages=r%6;
+ 	
  	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
- 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - damages;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - selfDamages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
  	} else {
- 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - damages;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - selfDamages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-	sendDamages(sd,r);
+	sendDamagesSuffered(lobby[roomNumber].currentPlayer,damages);
+	sendDamages(sd,damages);
+	if ( selfDamages != 0 ) sendSelfDamages(sd,selfDamages);
  	endOfAttackingPhase(sd,roomNumber,lobby);
 
  	return;
@@ -416,16 +446,21 @@ void sendDamages(SOCKET sd,int r){
  void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
  	int r;
  	r = rand();
+ 	int damages=r%16;
+ 	int selfDamages=r%10;
  	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
- 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
- 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - damages;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - selfDamages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
  	} else {
- 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
- 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - damages;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - selfDamages;
  		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
  	}
-	sendDamages(sd,r);
+ 	
+ 	sendDamagesSuffered(lobby[roomNumber].currentPlayer,damages);
+	sendDamages(sd,damages);
+	if ( selfDamages != 0 ) sendSelfDamages(sd,selfDamages);
  	endOfAttackingPhase(sd,roomNumber,lobby);
  	return;
  }
