@@ -470,7 +470,9 @@ void sendDamagesSuffered(SOCKET sd,int r){
  	notifyCurrentPlayer(roomNumber, lobby);	
  }
  void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
-
+	if(roomNumber < 0 ) return;
+	if(roomNumber >= MAX_NUMBER_OF_ROOMS ) return;
+	
  	if(lobby[roomNumber].idPlayer1==sd){
  		sendTo(sd,"Vous êtes déjà dans la room.\n");
  		return;
