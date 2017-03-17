@@ -485,8 +485,10 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 		}else if (strcmp(instructions[0],"pika?")==0){
 				send_image(sd,(char*)"easteregg");
 				if DEBUG printf("Pika %d piiii pika pikaCHUUUU!\n",sd);
+		}else if (strcmp(instructions[0],"quit")==0){
+				closesocket(sd);
+				if DEBUG printf("Client %d kick\n",sd);
 		}
-		
 		
 		
         free(originalMessage);
@@ -684,7 +686,6 @@ SOCKET newSocket(){
 
 int mainClient(int argc, char **argv) {
 	puts("\n\n\n\n\n\n\n\n\n\n");
-	//puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
 	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
 	puts("Pour voir le lobby : lobby\n ");
 	puts("Pour rejoindre la room 1234 : join 1234\n ");
@@ -692,8 +693,7 @@ int mainClient(int argc, char **argv) {
 	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
 	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
 	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
-	puts("Pour quitter, saisissez ctrl + alt-gr + ] à vide");
-	puts(" telnet> s'affichera devant votre curseur, à cet instant, saisissez \"quit\" puis appuyez sur entrée");
+	puts("Pour quitter, saisissez : quit\n");
 	
 	char buffer [MAX_COMMAND_BUFFER];
 	snprintf ( buffer, MAX_COMMAND_BUFFER,
