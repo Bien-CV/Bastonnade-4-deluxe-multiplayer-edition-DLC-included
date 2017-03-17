@@ -61,6 +61,33 @@ typedef struct room{
 
 typedef room_t* lobby;
 
+void initRoom(room_t* room, int maxHP);
+void printRoom(room_t* room);
+void printRoomNL(room_t* room);
+bool isRoomEmpty(room_t* room);
+void clearRoom(room_t* room);
+void sendTo(SOCKET client,const char* msg);
+void victoryMessage(SOCKET winner);
+void defeatMessage(SOCKET winner);
+void drawMessage(SOCKET winner);
+bool gameEnded(int roomNumber, lobby lobby);
+char** str_split(char* a_str, const char a_delim)
+void playerLeft(SOCKET id, lobby lobby);
+void initLobby(lobby lobby,int maxHP);
+void printLobby(lobby lobby);
+int getInt(void);
+void leetspeaker(char* clientString);
+SOCKET getOtherPlayer(SOCKET sd,int roomNumber,lobby lobby);
+void sendRoom(SOCKET sd, room_t* room);
+void sendLobby(SOCKET sd , lobby lobby);
+void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby);
+void notifyPlayersOfGameStart(int roomNumber,lobby lobby);
+void notifyCurrentPlayer(int roomNumber,lobby lobby);
+void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby);
+void showAliases(char ** list );
+void showAddrList(char ** list );
+void showHostent(hostent* h);
+
 void initRoom(room_t* room, int maxHP){
 	room->p1=maxHP;
 	room->p2=maxHP;
@@ -83,15 +110,13 @@ void printRoomNL(room_t* room){
 bool isRoomEmpty(room_t* room){
 	return ( (room->idPlayer1==0 ) && (room->idPlayer2==0) );
 }
- 
+
 void clearRoom(room_t* room){
 	room->p1=0;
 	room->p2=0;
 	room->idPlayer1=0;
 	room->idPlayer2=0;
 }
-
-
 
 void sendTo(SOCKET client,const char* msg){
 	send(client , msg , strlen(msg) , 0 );
@@ -132,55 +157,53 @@ bool gameEnded(int roomNumber, lobby lobby){
 	return false;
 }
 
-
-
 char** str_split(char* a_str, const char a_delim)
 {
-    char** result    = 0;
-    size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
+	char** result    = 0;
+	size_t count     = 0;
+	char* tmp        = a_str;
+	char* last_comma = 0;
+	char delim[2];
+	delim[0] = a_delim;
+	delim[1] = 0;
 
     /* Count how many elements will be extracted. */
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
+	while (*tmp)
+	{
+		if (a_delim == *tmp)
+		{
+			count++;
+			last_comma = tmp;
+		}
+		tmp++;
+	}
 
     /* Add space for trailing token. */
-    count += last_comma < (a_str + strlen(a_str) - 1);
+	count += last_comma < (a_str + strlen(a_str) - 1);
 
     /* Add space for terminating null string so caller
        knows where the list of returned strings ends. */
-    count++;
+	count++;
 
-    result = (char **)malloc(sizeof(char*) * count);
+	result = (char **)malloc(sizeof(char*) * count);
 
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
+	if (result)
+	{
+		size_t idx  = 0;
+		char* token = strtok(a_str, delim);
 
-        while (token)
-        {
-            assert(idx < count);
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
+		while (token)
+		{
+			assert(idx < count);
+			*(result + idx++) = strdup(token);
+			token = strtok(0, delim);
+		}
         //TODO Ajuster assert
         //assert(idx == count - 1);
-        *(result + idx) = 0;
-    }
+		*(result + idx) = 0;
+	}
 
-    return result;
+	return result;
 }
 
 //On itère sur toutes rooms quand un joueur part afin de vérifier dans quelles rooms il était présent.
@@ -219,13 +242,13 @@ void playerLeft(SOCKET id, lobby lobby){
 
 }
 
-
 void initLobby(lobby lobby,int maxHP){
 	int i;
 	for ( i=0;i<MAX_NUMBER_OF_ROOMS;i++){
 		initRoom(&(lobby[i]),maxHP);
 	}
 }
+
 void printLobby(lobby lobby){
 	int i;
 	printf(" ____________________________________________________________ \n");
@@ -240,25 +263,17 @@ void printLobby(lobby lobby){
 	}
 	printf("|____________________________________________________________|\n");
 }
-int mainClient(int argc, char **argv);
-int mainServer(int argc, char **argv);
-int getInt(void);
-void menu(int argc, char **argv);
-void showAddrList(char ** list );
-void showHostent(hostent* h);
-void showAliases(char ** list );
-SOCKET newSocket();
-void send_image(SOCKET sd, char * filename);
 
 int getInt(void){
 	int tmpInt;
 	if ( scanf ("%d",&tmpInt) == 1 ){
-	return tmpInt;
+		return tmpInt;
 	}else{
 		printf("Plus d'une chaine a été saisie.");
 		return ERROR_INT;
 	}
 }
+
 void leetspeaker(char* clientString){
 	int len=strlen(clientString);
 	for (int i=0;i<len;i++){
@@ -321,15 +336,14 @@ void giveRoomInfo(SOCKET sd,int roomNumber,lobby lobby){
 	sendTo(sd,buffer);
 	return;
 }
-	void notifyPlayersOfGameStart(int roomNumber,lobby lobby){
+void notifyPlayersOfGameStart(int roomNumber,lobby lobby){
 	sendTo(lobby[roomNumber].idPlayer1,"Game is starting !\n");
 	sendTo(lobby[roomNumber].idPlayer2,"Game is starting !\n");
 }
-	void notifyCurrentPlayer(int roomNumber,lobby lobby){
+void notifyCurrentPlayer(int roomNumber,lobby lobby){
 	sendTo(lobby[roomNumber].currentPlayer,"It's your turn to play.\n");
 }
-	
-	
+
 void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
 	if(gameEnded(roomNumber,lobby)){
 		return;
@@ -341,376 +355,376 @@ void endOfAttackingPhase(SOCKET sd,int roomNumber, lobby lobby){
 /*
  * Fonctions des différentes attaques
  */
-void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
-	int r;
-	r = rand()%6;
-	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
-		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
-	} else {
-		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
-	}
-	
-	endOfAttackingPhase(sd,roomNumber,lobby);
-	return;
-}
+ void attaqueNormale(SOCKET sd,int roomNumber,lobby lobby){
+ 	int r;
+ 	r = rand()%6;
+ 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
+ 	} else {
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
+ 	}
 
-void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
-	int r;
-	r = rand()%11;
-	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
-		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
-	} else {
-		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
-	}
+ 	endOfAttackingPhase(sd,roomNumber,lobby);
+ 	return;
+ }
 
-	endOfAttackingPhase(sd,roomNumber,lobby);
+ void attaqueRisquee(SOCKET sd,int roomNumber,lobby lobby){
+ 	int r;
+ 	r = rand()%11;
+ 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
+ 	} else {
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
+ 	}
 
-	return;
-}
+ 	endOfAttackingPhase(sd,roomNumber,lobby);
 
-void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
-	int r;
-	r = rand();
-	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
-		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
-		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
-	} else {
-		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
-		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
-		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
-	}
+ 	return;
+ }
 
-	endOfAttackingPhase(sd,roomNumber,lobby);
-	return;
-}
-void startGame( int roomNumber,lobby lobby){
-	lobby[roomNumber].currentPlayer=lobby[roomNumber].idPlayer1;
-	notifyPlayersOfGameStart(roomNumber, lobby);
-	notifyCurrentPlayer(roomNumber, lobby);	
-}
-void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
-	
-	if(lobby[roomNumber].idPlayer1==sd){
-		sendTo(sd,"Vous êtes déjà dans la room.\n");
-		return;
-	}
-	if(lobby[roomNumber].idPlayer2==sd){
-		sendTo(sd,"Vous êtes déjà dans la room.\n");
-		return;
-	}
-	
-	if(lobby[roomNumber].idPlayer1==0){
-		lobby[roomNumber].idPlayer1=sd;
-		sendTo(sd,"Vous avez rejoint la room en tant que joueur 1\n");
-		return;
-	}
-	
-	if(lobby[roomNumber].idPlayer2==0){
-		lobby[roomNumber].idPlayer2=sd;
-		sendTo(sd,"Vous avez rejoint la room en tant que joueur 2\n");
-		startGame( roomNumber,lobby );
-		return;
-	}
-	sendTo(sd,"La room n'est pas libre.\n");
-	
-	return;
-}
+ void attaqueSuicide(SOCKET sd,int roomNumber,lobby lobby){
+ 	int r;
+ 	r = rand();
+ 	if(sd == lobby[roomNumber].currentPlayer && sd == lobby[roomNumber].idPlayer1){
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%16;
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%10;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer2;
+ 	} else {
+ 		lobby[roomNumber].p1 = lobby[roomNumber].p1 - r%16;
+ 		lobby[roomNumber].p2 = lobby[roomNumber].p2 - r%10;
+ 		lobby[roomNumber].currentPlayer = lobby[roomNumber].idPlayer1;
+ 	}
 
-void showCharsOfString(char* s){
-	int i=0;
-	if (s == NULL) return;
-	size_t sz=strlen(s);
-	
-	for(i=0;i<sz;i++){
-		printf("Char %d : %c\n",i,s[i]);
-	}
-	
-	
-	return;
-}
-void processClientString(SOCKET sd, char* s,lobby lobby){
-	char** instructions;
-	int roomNumber;
+ 	endOfAttackingPhase(sd,roomNumber,lobby);
+ 	return;
+ }
+ void startGame( int roomNumber,lobby lobby){
+ 	lobby[roomNumber].currentPlayer=lobby[roomNumber].idPlayer1;
+ 	notifyPlayersOfGameStart(roomNumber, lobby);
+ 	notifyCurrentPlayer(roomNumber, lobby);	
+ }
+ void joinRoom(SOCKET sd, int roomNumber,lobby lobby){
+
+ 	if(lobby[roomNumber].idPlayer1==sd){
+ 		sendTo(sd,"Vous êtes déjà dans la room.\n");
+ 		return;
+ 	}
+ 	if(lobby[roomNumber].idPlayer2==sd){
+ 		sendTo(sd,"Vous êtes déjà dans la room.\n");
+ 		return;
+ 	}
+
+ 	if(lobby[roomNumber].idPlayer1==0){
+ 		lobby[roomNumber].idPlayer1=sd;
+ 		sendTo(sd,"Vous avez rejoint la room en tant que joueur 1\n");
+ 		return;
+ 	}
+
+ 	if(lobby[roomNumber].idPlayer2==0){
+ 		lobby[roomNumber].idPlayer2=sd;
+ 		sendTo(sd,"Vous avez rejoint la room en tant que joueur 2\n");
+ 		startGame( roomNumber,lobby );
+ 		return;
+ 	}
+ 	sendTo(sd,"La room n'est pas libre.\n");
+
+ 	return;
+ }
+
+ void showCharsOfString(char* s){
+ 	int i=0;
+ 	if (s == NULL) return;
+ 	size_t sz=strlen(s);
+
+ 	for(i=0;i<sz;i++){
+ 		printf("Char %d : %c\n",i,s[i]);
+ 	}
+
+
+ 	return;
+ }
+ void processClientString(SOCKET sd, char* s,lobby lobby){
+ 	char** instructions;
+ 	int roomNumber;
 	//permet de ne pas prendre en compte les caractères de terminaison de saisie sous telnet
-	s[strlen(s)-2]=' ';
-	if BUG_HUNTING showCharsOfString(s);
-	char* originalMessage=(char*)calloc(strlen(s)+1,sizeof(char));
-	char* processedMessage=(char*)calloc(strlen(s)+1,sizeof(char));
-	strcpy(processedMessage,s);
-	strcpy(originalMessage,s);
-	instructions = str_split(processedMessage, ' ');
-	
-	if (instructions!=NULL)
-    {
-		if ( instructions[0] == NULL ) {
-			printf("INSTRUCTION == NULL\n");
-			return;
-		}
-		if (strcmp(instructions[0],"R")==0){
-			
-			
-			roomNumber=atoi(instructions[1]);
-				if ( strcmp(instructions[2],"normale") == 0 ){
-					attaqueNormale(sd,roomNumber,lobby);
-					if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
-					if DEBUG printRoomNL(&(lobby[roomNumber]));
-				}else if ( strcmp(instructions[2],"risquée") == 0 ){
-					if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
-					attaqueRisquee(sd,roomNumber,lobby);
-					if DEBUG printRoomNL(&(lobby[roomNumber]));
-				}else if ( strcmp(instructions[2],"suicide") == 0 ){
-					if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
-					attaqueSuicide(sd,roomNumber,lobby);
-					if DEBUG printRoomNL(&(lobby[roomNumber]));
-				}
-				
-		}else if (strcmp(instructions[0],"/R")==0){
-				roomNumber=atoi(instructions[1]);
-				sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
-				if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
-									
-		}else if (strcmp(instructions[0],"join")==0){
-				roomNumber=atoi(instructions[1]);
-				joinRoom(sd,roomNumber,lobby);
-				if DEBUG printf("Joueur %d demande à entrer dans la room %d\n",sd,roomNumber);
-				if DEBUG printRoomNL(&(lobby[roomNumber]));
-		}else if (strcmp(instructions[0],"lobby")==0){
-				sendLobby(sd,lobby);
-				if DEBUG printf("Joueur %d demande à afficher le lobby\n",sd);
-		}else if (strcmp(instructions[0],"pika?")==0){
-				send_image(sd,(char*)"easteregg");
-				if DEBUG printf("Pika %d piiii pika pikaCHUUUU!\n",sd);
-		}else if (strcmp(instructions[0],"quit")==0){
-				closesocket(sd);
-				if DEBUG printf("Client %d kick\n",sd);
-		}
-		
-		
-        free(originalMessage);
-        free(processedMessage);
-        int i;
-        for (i = 0; instructions[i]; i++)
-        {
-            
-            free(instructions[i]);
-        }
-    free(instructions);
-    }else{
-		if DEBUG printf("INSTRUCTIONS NULLES\n");
-	}
-	return;
-}
+ 	s[strlen(s)-2]=' ';
+ 	if BUG_HUNTING showCharsOfString(s);
+ 	char* originalMessage=(char*)calloc(strlen(s)+1,sizeof(char));
+ 	char* processedMessage=(char*)calloc(strlen(s)+1,sizeof(char));
+ 	strcpy(processedMessage,s);
+ 	strcpy(originalMessage,s);
+ 	instructions = str_split(processedMessage, ' ');
 
-void print_image(FILE *fptr){
-		char read_string[MAX_WELCOME_LEN];
-	 
-		while(fgets(read_string,sizeof(read_string),fptr) != NULL)
-			printf("%s",read_string);
-}
+ 	if (instructions!=NULL)
+ 	{
+ 		if ( instructions[0] == NULL ) {
+ 			printf("INSTRUCTION == NULL\n");
+ 			return;
+ 		}
+ 		if (strcmp(instructions[0],"R")==0){
 
 
-void printSD_image(SOCKET sd, FILE *fptr){
-		
-		
-		char read_string[MAX_WELCOME_LEN];
-	 
-		while(fgets(read_string,sizeof(read_string),fptr) != NULL)
-			sendTo(sd,read_string);
-}
+ 			roomNumber=atoi(instructions[1]);
+ 			if ( strcmp(instructions[2],"normale") == 0 ){
+ 				attaqueNormale(sd,roomNumber,lobby);
+ 				if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
+ 				if DEBUG printRoomNL(&(lobby[roomNumber]));
+ 			}else if ( strcmp(instructions[2],"risquée") == 0 ){
+ 				if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
+ 				attaqueRisquee(sd,roomNumber,lobby);
+ 				if DEBUG printRoomNL(&(lobby[roomNumber]));
+ 			}else if ( strcmp(instructions[2],"suicide") == 0 ){
+ 				if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
+ 				attaqueSuicide(sd,roomNumber,lobby);
+ 				if DEBUG printRoomNL(&(lobby[roomNumber]));
+ 			}
 
-void send_image(SOCKET sd, char * filename){
-	
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-		printSD_image(sd, fptr);
-	 
-		fclose(fptr);
-}
+ 		}else if (strcmp(instructions[0],"/R")==0){
+ 			roomNumber=atoi(instructions[1]);
+ 			sendTo(getOtherPlayer(sd,roomNumber,lobby),originalMessage);
+ 			if DEBUG printf("Message envoyé par %d dans la room %d",sd,roomNumber);
+
+ 		}else if (strcmp(instructions[0],"join")==0){
+ 			roomNumber=atoi(instructions[1]);
+ 			joinRoom(sd,roomNumber,lobby);
+ 			if DEBUG printf("Joueur %d demande à entrer dans la room %d\n",sd,roomNumber);
+ 			if DEBUG printRoomNL(&(lobby[roomNumber]));
+ 		}else if (strcmp(instructions[0],"lobby")==0){
+ 			sendLobby(sd,lobby);
+ 			if DEBUG printf("Joueur %d demande à afficher le lobby\n",sd);
+ 		}else if (strcmp(instructions[0],"pika?")==0){
+ 			send_image(sd,(char*)"easteregg");
+ 			if DEBUG printf("Pika %d piiii pika pikaCHUUUU!\n",sd);
+ 		}else if (strcmp(instructions[0],"quit")==0){
+ 			closesocket(sd);
+ 			if DEBUG printf("Client %d kick\n",sd);
+ 		}
 
 
-void printMenu(int choice){
-	if ( choice == 0 ){
-		printf("-Menu-\n");
-		printf("1 - Jouer\n");
-		printf("2 - Serveur\n");
-		printf("0 - Quitter\n");
-	}else if ( choice == 1 ){
-		char *filename = (char *)"menu1.txt";
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-	 
-		print_image(fptr);
-	 
-		fclose(fptr);
-	}else if ( choice == 2 ){
-		char *filename = (char *)"menu2.txt";
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-	 
-		print_image(fptr);
-	 
-		fclose(fptr);
-	
-	}
-	return;
+ 		free(originalMessage);
+ 		free(processedMessage);
+ 		int i;
+ 		for (i = 0; instructions[i]; i++)
+ 		{
+
+ 			free(instructions[i]);
+ 		}
+ 		free(instructions);
+ 	}else{
+ 		if DEBUG printf("INSTRUCTIONS NULLES\n");
+ 	}
+ 	return;
+ }
+
+ void print_image(FILE *fptr){
+ 	char read_string[MAX_WELCOME_LEN];
+
+ 	while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+ 		printf("%s",read_string);
+ }
+
+
+ void printSD_image(SOCKET sd, FILE *fptr){
+
+
+ 	char read_string[MAX_WELCOME_LEN];
+
+ 	while(fgets(read_string,sizeof(read_string),fptr) != NULL)
+ 		sendTo(sd,read_string);
+ }
+
+ void send_image(SOCKET sd, char * filename){
+
+ 	FILE *fptr = NULL;
+
+ 	if((fptr = fopen(filename,"r")) == NULL)
+ 	{
+ 		fprintf(stderr,"error opening %s\n",filename);
+ 		return;
+ 	}
+ 	printSD_image(sd, fptr);
+
+ 	fclose(fptr);
+ }
+
+
+ void printMenu(int choice){
+ 	if ( choice == 0 ){
+ 		printf("-Menu-\n");
+ 		printf("1 - Jouer\n");
+ 		printf("2 - Serveur\n");
+ 		printf("0 - Quitter\n");
+ 	}else if ( choice == 1 ){
+ 		char *filename = (char *)"menu1.txt";
+ 		FILE *fptr = NULL;
+
+ 		if((fptr = fopen(filename,"r")) == NULL)
+ 		{
+ 			fprintf(stderr,"error opening %s\n",filename);
+ 			return;
+ 		}
+
+ 		print_image(fptr);
+
+ 		fclose(fptr);
+ 	}else if ( choice == 2 ){
+ 		char *filename = (char *)"menu2.txt";
+ 		FILE *fptr = NULL;
+
+ 		if((fptr = fopen(filename,"r")) == NULL)
+ 		{
+ 			fprintf(stderr,"error opening %s\n",filename);
+ 			return;
+ 		}
+
+ 		print_image(fptr);
+
+ 		fclose(fptr);
+
+ 	}
+ 	return;
  }
  
  void printEasterEgg(){
-	
-		char *filename = (char *)"easteregg";
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-	 
-		print_image(fptr);
-	 
-		fclose(fptr);
-	
-	
-	return;
+
+ 	char *filename = (char *)"easteregg";
+ 	FILE *fptr = NULL;
+
+ 	if((fptr = fopen(filename,"r")) == NULL)
+ 	{
+ 		fprintf(stderr,"error opening %s\n",filename);
+ 		return;
+ 	}
+
+ 	print_image(fptr);
+
+ 	fclose(fptr);
+
+
+ 	return;
  }
  
-          
-void menu(int argc, char **argv){
-	printMenu(AFFICHAGE_EXCENTRIQUE);
-	int intInput=getInt();
-	if ( intInput == 2 ){
+
+ void menu(int argc, char **argv){
+ 	printMenu(AFFICHAGE_EXCENTRIQUE);
+ 	int intInput=getInt();
+ 	if ( intInput == 2 ){
 		//call server
-        if DEBUG puts("Launching server...\n");
-		mainServer(argc, argv);
-	}else if( intInput == 1 ){
+ 		if DEBUG puts("Launching server...\n");
+ 		mainServer(argc, argv);
+ 	}else if( intInput == 1 ){
 		//call client
-		mainClient(argc, argv);
-	}else if( intInput == 0 ){
+ 		mainClient(argc, argv);
+ 	}else if( intInput == 0 ){
 		//call exit
-		return;
-	}else if( intInput == 3 ){
+ 		return;
+ 	}else if( intInput == 3 ){
 		//call easter egg
-		printEasterEgg();
-		return;
-	}else{
-		printf("Erreur de saisie menu.");
-	}
-}
+ 		printEasterEgg();
+ 		return;
+ 	}else{
+ 		printf("Erreur de saisie menu.");
+ 	}
+ }
  
  
  void printWelcomeMessage(int choice){
-	if ( choice == 0 ){
-		printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
-	}else if ( choice == 1 ){
-		char *filename = (char *)"welcome.txt";
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-	 
-		print_image(fptr);
-	 
-		fclose(fptr);
-	}else if ( choice == 2 ){
-		char *filename = (char *)"welcome2.txt";
-		FILE *fptr = NULL;
-	 
-		if((fptr = fopen(filename,"r")) == NULL)
-		{
-			fprintf(stderr,"error opening %s\n",filename);
-			return;
-		}
-	 
-		print_image(fptr);
-	 
-		fclose(fptr);
-	
-	}
-	return;
+ 	if ( choice == 0 ){
+ 		printf("Bienvenue dans Bastonnade 4 deluxe multiplayer edition DLC included\n");
+ 	}else if ( choice == 1 ){
+ 		char *filename = (char *)"welcome.txt";
+ 		FILE *fptr = NULL;
+
+ 		if((fptr = fopen(filename,"r")) == NULL)
+ 		{
+ 			fprintf(stderr,"error opening %s\n",filename);
+ 			return;
+ 		}
+
+ 		print_image(fptr);
+
+ 		fclose(fptr);
+ 	}else if ( choice == 2 ){
+ 		char *filename = (char *)"welcome2.txt";
+ 		FILE *fptr = NULL;
+
+ 		if((fptr = fopen(filename,"r")) == NULL)
+ 		{
+ 			fprintf(stderr,"error opening %s\n",filename);
+ 			return;
+ 		}
+
+ 		print_image(fptr);
+
+ 		fclose(fptr);
+
+ 	}
+ 	return;
  }
  
-  
+
  
  
-int main(int argc, char **argv){
-	
-	printWelcomeMessage(AFFICHAGE_EXCENTRIQUE);
-	
+ int main(int argc, char **argv){
+
+ 	printWelcomeMessage(AFFICHAGE_EXCENTRIQUE);
+
 	//printf("Argc = %d , argv1 = %s",argc,argv[1]);
 	//printf("strcmp argv1 client:%d\n",strcmp(argv[1],"client"));
-	
-	if ( ( argc == 2 ) && ( 0 == strcmp(argv[1],"client")) ){
-		mainClient(argc, argv);
-	}else if( ( argc == 2 ) && ( 0 == strcmp(argv[1],"serveur")) ){
-		if DEBUG puts("Launching server...\n");
-		mainServer(argc, argv);
-	}else{
-		menu(argc, argv);
-	}
-	
-	return EXIT_SUCCESS;
-}
 
-SOCKET newSocket(){
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(sock == INVALID_SOCKET)
-	{
-		perror("socket()");
-		exit(errno);
-	}
-	return sock;
-}
+ 	if ( ( argc == 2 ) && ( 0 == strcmp(argv[1],"client")) ){
+ 		mainClient(argc, argv);
+ 	}else if( ( argc == 2 ) && ( 0 == strcmp(argv[1],"serveur")) ){
+ 		if DEBUG puts("Launching server...\n");
+ 		mainServer(argc, argv);
+ 	}else{
+ 		menu(argc, argv);
+ 	}
 
-int mainClient(int argc, char **argv) {
-	puts("\n\n\n\n\n\n\n\n\n\n");
-	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
-	puts("Pour voir le lobby : lobby\n ");
-	puts("Pour rejoindre la room 1234 : join 1234\n ");
-	puts("Pour executer une attaque normale dans la room 1234 : R 1234 normale\n ");
-	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
-	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
-	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
-	puts("Pour quitter, saisissez : quit\n");
-	
-	char buffer [MAX_COMMAND_BUFFER];
-	snprintf ( buffer, MAX_COMMAND_BUFFER,
-		"%s %s %s", "telnet -E",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
-	
-	system(buffer);
-	
-	return EXIT_SUCCESS;
-}
+ 	return EXIT_SUCCESS;
+ }
+
+ SOCKET newSocket(){
+ 	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+ 	if(sock == INVALID_SOCKET)
+ 	{
+ 		perror("socket()");
+ 		exit(errno);
+ 	}
+ 	return sock;
+ }
+
+ int mainClient(int argc, char **argv) {
+ 	puts("\n\n");
+ 	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
+ 	puts("Pour voir le lobby : lobby\n ");
+ 	puts("Pour rejoindre la room 1234 : join 1234\n ");
+ 	puts("Pour executer une attaque normale dans la room 1234 : R 1234 normale\n ");
+ 	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
+ 	puts("Pour executer une attaque suicide dans la room 1234 : R 1234 suicide\n ");
+ 	puts("Pour parler dans la room 1234 : /R 1234 un message\n ");
+ 	puts("Pour quitter, saisissez : quit\n");
+
+ 	char buffer [MAX_COMMAND_BUFFER];
+ 	snprintf ( buffer, MAX_COMMAND_BUFFER,
+ 		"%s %s %s", "telnet -E",DEFAULT_HOST_ADDRESS,DEFAULT_HOST_PORT);
+
+ 	system(buffer);
+
+ 	return EXIT_SUCCESS;
+ }
 
 
-int mainServer(int argc , char *argv[])
-{    
-    room_t lobby[MAX_NUMBER_OF_ROOMS];
-    initLobby(lobby,20);
-    printLobby(lobby);
-    
+ int mainServer(int argc , char *argv[])
+ {    
+ 	room_t lobby[MAX_NUMBER_OF_ROOMS];
+ 	initLobby(lobby,20);
+ 	printLobby(lobby);
+
     int sd; //socket descriptor
     int max_sd; //Plus grand socket descriptor
     int socketPrincipal;
@@ -728,152 +742,152 @@ int mainServer(int argc , char *argv[])
     address.sin_port = htons( DEFAULT_PORT );
     
     char buffer[BUFFER_SIZE];
-      
+
     //Ensemble des sockets surveillés pour lire des données
     fd_set readfds;
-      
+
     //message de bienvenue
     char *message = DEFAULT_MESSAGE;
-  
+
     //initialisation de client_socket[]
     for (i = 0; i < MAX_CONNEXIONS; i++) 
     {
-        client_socket[i] = 0;
+    	client_socket[i] = 0;
     }
     
     socketPrincipal = newSocket();
-  
+
     //Précise que le socket principal accepte les connexions multiples
     //Bonne pratique, mais pas nécessaire
     if( setsockopt(socketPrincipal, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
     {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
+    	perror("setsockopt");
+    	exit(EXIT_FAILURE);
     }
-  
+
 
     //bind à &adress sur le port par défaut
     if (bind(socketPrincipal, (struct sockaddr *)&address, sizeof(address))<0) 
     {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
+    	perror("bind failed");
+    	exit(EXIT_FAILURE);
     }
     printf("Ecoute en cours sur le port %d \n", DEFAULT_PORT);
-     
+
     if (listen(socketPrincipal, MAX_PENDING_CONNEXIONS) < 0)
     {
-        perror("listen");
-        exit(EXIT_FAILURE);
+    	perror("listen");
+    	exit(EXIT_FAILURE);
     }
-      
+
     addrlen = sizeof(address);
     
     
     puts("En attente de connexions ...");
-     
+
     while(TRUE) 
     {
 		//puts("Allo ?");
         //reset l'ensemble readfs car select() modifie les file descriptors ( fd ) à chaque appel
-        FD_ZERO(&readfds);
-  
+    	FD_ZERO(&readfds);
+
         //On ajoute le socket principal à l'ensemble des fd destinés à être lu
-        FD_SET(socketPrincipal, &readfds);
-        max_sd = socketPrincipal;
-         
+    	FD_SET(socketPrincipal, &readfds);
+    	max_sd = socketPrincipal;
+
         //Ajout des sockets auxilliaires
-        for ( i = 0 ; i < max_clients ; i++) 
-        {
+    	for ( i = 0 ; i < max_clients ; i++) 
+    	{
             //socket descriptor
-            sd = client_socket[i];
-             
+    		sd = client_socket[i];
+
             //Si valide alors on l'ajoute à la liste des fd à lire
-            if(sd > 0)
-                FD_SET( sd , &readfds);
-             
+    		if(sd > 0)
+    			FD_SET( sd , &readfds);
+
             //on redéfinit le plus grand fd, car il y en a besoin pour le select, c'est un paramètre à fournir.
-            if(sd > max_sd)
-                max_sd = sd;
-        }
-  
+    		if(sd > max_sd)
+    			max_sd = sd;
+    	}
+
         //on attend un signe d'activité l'un des sockets , sans timeout
-        activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);
-    
-        if ((activity < 0) && (errno!=EINTR)) 
-        {
-            printf("select error : activity<0");
-        }
-          
+    	activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);
+
+    	if ((activity < 0) && (errno!=EINTR)) 
+    	{
+    		printf("select error : activity<0");
+    	}
+
         //Si quelque chose s'est passé sur le socket principal, alors c'est une connexion entrante.
-        if (FD_ISSET(socketPrincipal, &readfds)) 
-        {
-            if ((new_socket = accept(socketPrincipal, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-            {
-                perror("accept : l.412 socket principal");
-                exit(EXIT_FAILURE);
-            }
-          
+    	if (FD_ISSET(socketPrincipal, &readfds)) 
+    	{
+    		if ((new_socket = accept(socketPrincipal, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
+    		{
+    			perror("accept : l.412 socket principal");
+    			exit(EXIT_FAILURE);
+    		}
+
             //inform user of socket number - used in send and receive commands
-            printf("Nouvelle connexion, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-        
+    		printf("Nouvelle connexion, le fd du socket est %d , l'ip est : %s , le port est : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+
             //Envoi du message de bienvenue
-            if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
-            {
-                perror("send");
-            }
-              
+    		if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
+    		{
+    			perror("send");
+    		}
+
             //puts("Message envoyé");
-              
+
             //add new socket to array of sockets
-            for (i = 0; i < max_clients; i++) 
-            {
+    		for (i = 0; i < max_clients; i++) 
+    		{
                 //if position is empty
-                if( client_socket[i] == 0 )
-                {
-                    client_socket[i] = new_socket;
-                    printf("Client ajouté à la liste des sockets en position %d\n" , i);
-                     
-                    break;
-                }
-            }
-        }
-          
+    			if( client_socket[i] == 0 )
+    			{
+    				client_socket[i] = new_socket;
+    				printf("Client ajouté à la liste des sockets en position %d\n" , i);
+
+    				break;
+    			}
+    		}
+    	}
+
         //Si ce n'est pas une nouvelle connexion sur le socket principal alors c'est une opération d'entrée ou sortie sur un socket quelqconque
-        for (i = 0; i < max_clients; i++) 
-        {
-            sd = client_socket[i];
-              
-            if (FD_ISSET( sd , &readfds)) 
-            {
+    	for (i = 0; i < max_clients; i++) 
+    	{
+    		sd = client_socket[i];
+
+    		if (FD_ISSET( sd , &readfds)) 
+    		{
                 //Vérifie si c'était une fermeture de connexion et lit le message entrant
-                if ((valread = read( sd , buffer, READ_BUFFER_SIZE )) == 0)
-                {
+    			if ((valread = read( sd , buffer, READ_BUFFER_SIZE )) == 0)
+    			{
                     //Quelqu'un s'est déconnecté, affiche les détails
-                    getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
-                    printf("Hote déconnecté , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                    playerLeft(sd,lobby);
+    				getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
+    				printf("Hote déconnecté , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+    				playerLeft(sd,lobby);
                     //Ferme le socket et le marque comme étant libre ( 0 )
-                    close( sd );
-                    client_socket[i] = 0;
-                }
-                  
+    				close( sd );
+    				client_socket[i] = 0;
+    			}
+
                 //Opération sur la chaîne reçue
-                else
-                {
+    			else
+    			{
                     //assure que la chaîne est bien terminée
-                    buffer[valread] = '\0';
-                    
-                    
+    				buffer[valread] = '\0';
+
+
                     //buffer contient maintenant la chaîne envoyée par le client
                     //On peut donc l'utiliser.
-                    printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
-                    processClientString(sd,buffer,lobby);                    
+    				printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
+    				processClientString(sd,buffer,lobby);                    
                     //send(sd , buffer , strlen(buffer) , 0 );
-                }
-            }
-        }
+    			}
+    		}
+    	}
     }
-      
+
     return 0;
 } 
 
@@ -909,135 +923,4 @@ void showHostent(hostent* h){
 	printf("h_length:%d\n",h->h_length);
 	showAddrList(h->h_addr_list);
 	
-}
-
-/***********************
- *
- * Partie jeu
- *
- ***********************/
-
-// Fonction pour changer le tour des joueurs
-void change_player(room_t* room){
-	if(room->currentPlayer==room->idPlayer1){
-		room->currentPlayer = room->idPlayer2;
-	} else {
-		room->currentPlayer = room->idPlayer1;
-	}
-}
-
-// Clean la chaine de caractères entrée par l'utilisateur
-int clean_stdin() {
-    while (getchar()!='\n');
-    return 1;
-}
-
-// Fonction pour afficher les choix du joueur lors de son tour de jeu
-void play(room_t* room){
-	int r;
-	// Affichage des choix
-	// printf("0 - Passer son tour\n");
-	// Dégats ingligés par les attaques à définir
-	// Inflige des dégats entre 1 et 5
-	printf("\n1 - Attaque normale\n");
-	// Inflige des dégats entre 1 et 10
-	printf("2 - Attaque risquée\n");
-	// Inflige des dégats à l'adversaire et à soi même
-	printf("3 - Attaque suicide\n");
-	
-	// Vérification de l'entrée utilisateur, si le choix fait parti de ceux proposés
-	int choice =0;  
-	char c;
-	do {  
-		printf("Choisir une action : ");
-	} while (((scanf("%d%c", &choice, &c)!=2 || c!='\n') && clean_stdin()) || choice<1 || choice>3);
-	
-	// Tour de jeu du joueur 1
-	/*if(room->currentPlayer==room->idPlayer1){
-		if(choice==1) {
-			r = rand()%6;	
-			room->p2 = room->p2 - r;
-		} else if(choice==2) {
-			r = rand()%11;	
-			room->p2 = room->p2 - r;
-			room->p1 = room->p1 - rand()%6;
-		} else if(choice==3) {
-			r = rand()%16;	
-			room->p2 = room->p2 - r;
-			room->p1 = room->p1 - rand()%11;
-		}			
-	}
-
-	// Tour de jeu du joueur 2 
-	if(room->currentPlayer==room->idPlayer2){
-		if(choice==1) {
-			r = rand()%6;	
-			room->p1 = room->p1 - r;
-		}
-		if(choice==2) {
-			r = rand()%11;	
-			room->p1 = room->p1 - r;
-			room->p2 = room->p2 - rand()%6;
-		}
-		if(choice==3) {
-			r = rand()%16;	
-			room->p1 = room->p1 - r;
-			room->p2 = room->p2 - rand()%10;
-		}			
-	}*/
-
-	// Affichage des dégats
-	if(r==0){
-		printf("\nAttaque ratée !");
-	} else {
-		printf("\nDégats ingligés : -");
-		printf("%d", r);
-	}
-
-	// Un des joueurs n'a plus de vie	
-	if(room->p1<0){
-		room->p1=0;
-	}
-
-	if(room->p2<0){
-		room->p2=0;
-	}
-
-	printf("\nVie du joueur 1: ");
-	printf("%d",room->p1);
-	printf("\nVie du joueur 2: ");
-	printf("%d",room->p2);
-	printf("\n");
-
-	// Fonction pour changer de joueur
-	change_player(room);
-}
-
-int game(room_t* room){
-	// Tant que les 2 joueurs ont des points de vie
-	while(room->p1 > 0 || room->p2 > 0){
-		//printf("\nAu tour du joueur ");
-		//printf("%d",room->currentPlayer);		
-		play(room);
-
-		/*if(room->p1<=0){
-			printf("\nLe gagnant est le joueur 2 !");
-		} else if (room->p2<=0){
-			printf("\nLe gagnant est le joueur 1 !");
-		}*/
-
-		// Relancer une partie ou quitter
-		/*char answer;
-		char c;
-		printf("\nVoulez-vous-rejouer ? (o/n)");
-		do {  
-			printf("Veuillez entrer o ou n");
-		} while (((scanf("%c", &answer, &c)!=2 || c!='\n') && clean_stdin()) || answer=="o" || answer=="n");
-		if(answer=="o") {
-			endGame=!endGame;
-			p1=10;
-			p2=10;
-			player=1;
-		}*/
-	}
 }
