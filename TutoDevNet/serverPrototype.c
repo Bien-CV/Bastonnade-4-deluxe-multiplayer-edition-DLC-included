@@ -99,34 +99,34 @@ void sendTo(SOCKET client,const char* msg){
 
 
 void victoryMessage(SOCKET winner){
-	sendTo(winner , "Vous avez gagné!");
+	sendTo(winner , "Vous avez gagné!\n");
 }
 
 void defeatMessage(SOCKET winner){
-	sendTo(winner , "Vous avez perdu!");
+	sendTo(winner , "Vous avez perdu!\n");
 }
 
 void drawMessage(SOCKET winner){
-	sendTo(winner , "Vous êtes tous les 2 morts ! Egalité");
+	sendTo(winner , "Vous êtes tous les 2 morts ! Egalité\n");
 }
 
 bool gameEnded(int roomNumber, lobby lobby){
 	if(lobby[roomNumber].p1<=0 && lobby[roomNumber].p2 > 0){
 		victoryMessage(lobby[roomNumber].idPlayer2);
 		defeatMessage(lobby[roomNumber].idPlayer1);
-		clearRoom(&(lobby[roomNumber]));
+		initRoom(&(lobby[roomNumber]),MAX_HP);
 		return true;
 	}
 	if(lobby[roomNumber].p2<=0 && lobby[roomNumber].p1 > 0){
 		victoryMessage(lobby[roomNumber].idPlayer1);
 		defeatMessage(lobby[roomNumber].idPlayer2);
-		clearRoom(&(lobby[roomNumber]));
+		initRoom(&(lobby[roomNumber]),MAX_HP);
 		return true;
 	}
 	if(lobby[roomNumber].p1<=0 && lobby[roomNumber].p2<=0){
 		drawMessage(lobby[roomNumber].idPlayer1);
 		drawMessage(lobby[roomNumber].idPlayer2);
-		clearRoom(&(lobby[roomNumber]));
+		initRoom(&(lobby[roomNumber]),MAX_HP);
 		return true;
 	}
 	return false;
@@ -175,7 +175,8 @@ char** str_split(char* a_str, const char a_delim)
             *(result + idx++) = strdup(token);
             token = strtok(0, delim);
         }
-        assert(idx == count - 1);
+        //TODO Ajuster assert
+        //assert(idx == count - 1);
         *(result + idx) = 0;
     }
 
@@ -455,19 +456,16 @@ void processClientString(SOCKET sd, char* s,lobby lobby){
 			
 			roomNumber=atoi(instructions[1]);
 				if ( strcmp(instructions[2],"normale") == 0 ){
-					
 					attaqueNormale(sd,roomNumber,lobby);
 					if DEBUG printf("Attaque normale lancée par %d dans la room %d",sd,roomNumber);
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"risquée") == 0 ){
 					if DEBUG printf("Attaque risquée lancée par %d dans la room %d",sd,roomNumber);
 					attaqueRisquee(sd,roomNumber,lobby);
-					
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}else if ( strcmp(instructions[2],"suicide") == 0 ){
 					if DEBUG printf("Attaque suicide lancée par %d dans la room %d",sd,roomNumber);
 					attaqueSuicide(sd,roomNumber,lobby);
-					
 					if DEBUG printRoomNL(&(lobby[roomNumber]));
 				}
 				
@@ -688,6 +686,7 @@ int mainClient(int argc, char **argv) {
 	puts("\n\n\n\n\n\n\n\n\n\n");
 	//puts("\nPour jouer, utilisez la commande suivante :\n\ntelnet localhost 5000 \n\nlocalhost doit être l'adresse d'un serveur Bastonnade. \n\n\n ");
 	puts("Ensuite, écrivez une commande et appuyez  entrée.\n\n ");
+	puts("Pour voir le lobby : lobby\n ");
 	puts("Pour rejoindre la room 1234 : join 1234\n ");
 	puts("Pour executer une attaque normale dans la room 1234 : R 1234 normale\n ");
 	puts("Pour executer une attaque risquée dans la room 1234 : R 1234 risquée\n ");
@@ -869,7 +868,7 @@ int mainServer(int argc , char *argv[])
                     //On peut donc l'utiliser.
                     printf("Le client %d:%s envoie : %s \n",sd,inet_ntoa(address.sin_addr), buffer);
                     processClientString(sd,buffer,lobby);                    
-                    send(sd , buffer , strlen(buffer) , 0 );
+                    //send(sd , buffer , strlen(buffer) , 0 );
                 }
             }
         }
